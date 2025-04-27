@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS - 설정</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --dashboard-color: #4e73df;
+            --products-color: #1cc88a;
+            --customers-color: #f6c23e;
+            --orders-color: #e74a3b;
+            --employees-color: #36b9cc;
+            --settings-color: #6f42c1;
+        }
+        body {
+            background-color: #f8f9fc;
+        }
+        .navbar {
+            margin-bottom: 30px;
+            padding: 0;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .navbar-brand {
+            padding: 15px 20px;
+            background-color: #4e73df;
+            margin-right: 0;
+            font-weight: bold;
+        }
+        .navbar-nav .nav-item .nav-link {
+            padding: 15px 20px;
+            position: relative;
+            transition: all 0.3s ease;
+            color: #6e707e;
+            font-weight: 500;
+        }
+        .navbar-nav .nav-item .nav-link:hover {
+            color: #333;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .navbar-nav .nav-item .nav-link.settings-link.active {
+            color: white;
+            background-color: var(--settings-color);
+        }
+        .menu-icon {
+            margin-right: 8px;
+        }
+        .settings-icon {
+            color: var(--settings-color);
+        }
+        .nav-link.active .menu-icon {
+            color: white;
+        }
+        .page-header {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e3e6f0;
+            padding-bottom: 15px;
+        }
+        .settings-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .settings-card h2 {
+            color: #6f42c1;
+            border-bottom: 1px solid #e3e6f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 네비게이션 바 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white rounded">
+            <div class="container-fluid p-0">
+                <a class="navbar-brand text-white" href="/">WMS 시스템</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link dashboard-link" href="/dashboard">
+                                <i class="bi bi-speedometer2 menu-icon dashboard-icon"></i>대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link products-link" href="/">
+                                <i class="bi bi-box menu-icon products-icon"></i>제품 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link customers-link" href="/customers">
+                                <i class="bi bi-building menu-icon customers-icon"></i>업체 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link orders-link" href="/orders">
+                                <i class="bi bi-cart-check menu-icon orders-icon"></i>제품 주문
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link employees-link" href="/employees">
+                                <i class="bi bi-people menu-icon employees-icon"></i>직원 관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link settings-link active" href="/settings">
+                                <i class="bi bi-gear menu-icon settings-icon"></i>설정
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <h1 class="page-header">
+            <i class="bi bi-gear text-primary"></i> 시스템 설정
+        </h1>
+
+        <!-- 알림 메시지 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- 시스템 설정 카드 -->
+        <div class="settings-card">
+            <h2><i class="bi bi-gear-fill"></i> 시스템 설정</h2>
+            <form method="POST" action="{{ url_for('settings') }}">
+                <div class="mb-3">
+                    <label for="company_name" class="form-label">회사명</label>
+                    <input type="text" class="form-control" id="company_name" name="company_name" value="{{ config.get('company_name', '') }}">
+                </div>
+                <div class="mb-3">
+                    <label for="currency" class="form-label">통화 단위</label>
+                    <select class="form-select" id="currency" name="currency">
+                        <option value="USD" {% if config.get('currency') == 'USD' %}selected{% endif %}>USD ($)</option>
+                        <option value="KRW" {% if config.get('currency') == 'KRW' %}selected{% endif %}>KRW (₩)</option>
+                        <option value="JPY" {% if config.get('currency') == 'JPY' %}selected{% endif %}>JPY (¥)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="date_format" class="form-label">날짜 형식</label>
+                    <select class="form-select" id="date_format" name="date_format">
+                        <option value="YYYY-MM-DD" {% if config.get('date_format') == 'YYYY-MM-DD' %}selected{% endif %}>YYYY-MM-DD</option>
+                        <option value="MM/DD/YYYY" {% if config.get('date_format') == 'MM/DD/YYYY' %}selected{% endif %}>MM/DD/YYYY</option>
+                        <option value="DD/MM/YYYY" {% if config.get('date_format') == 'DD/MM/YYYY' %}selected{% endif %}>DD/MM/YYYY</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">설정 저장</button>
+            </form>
+        </div>
+
+        <!-- 데이터베이스 관리 카드 -->
+        <div class="settings-card">
+            <h2><i class="bi bi-database"></i> 데이터베이스 관리</h2>
+            <div class="mb-3">
+                <button type="button" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-download"></i> 데이터 백업
+                </button>
+                <button type="button" class="btn btn-outline-success me-2">
+                    <i class="bi bi-upload"></i> 데이터 복원
+                </button>
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#resetModal">
+                    <i class="bi bi-trash"></i> 데이터 초기화
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 데이터 초기화 확인 모달 -->
+    <div class="modal fade" id="resetModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">데이터 초기화 확인</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>모든 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-danger">초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 부트스트랩 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

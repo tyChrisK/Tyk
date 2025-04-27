@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS - 업체 정보 수정</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --dashboard-color: #4e73df;
+            --products-color: #1cc88a;
+            --customers-color: #f6c23e;
+            --orders-color: #e74a3b;
+            --employees-color: #36b9cc;
+        }
+        body {
+            background-color: #f8f9fc;
+        }
+        .navbar {
+            margin-bottom: 30px;
+            padding: 0;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .navbar-brand {
+            padding: 15px 20px;
+            background-color: #4e73df;
+            margin-right: 0;
+            font-weight: bold;
+        }
+        .navbar-nav .nav-item .nav-link {
+            padding: 15px 20px;
+            position: relative;
+            transition: all 0.3s ease;
+            color: #6e707e;
+            font-weight: 500;
+        }
+        .navbar-nav .nav-item .nav-link:hover {
+            color: #333;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        /* 각 메뉴별 활성화 스타일 */
+        .navbar-nav .nav-item .nav-link.dashboard-link.active {
+            color: white;
+            background-color: var(--dashboard-color);
+        }
+        .navbar-nav .nav-item .nav-link.products-link.active {
+            color: white;
+            background-color: var(--products-color);
+        }
+        .navbar-nav .nav-item .nav-link.customers-link.active {
+            color: white;
+            background-color: var(--customers-color);
+        }
+        .navbar-nav .nav-item .nav-link.orders-link.active {
+            color: white;
+            background-color: var(--orders-color);
+        }
+        .navbar-nav .nav-item .nav-link.employees-link.active {
+            color: white;
+            background-color: var(--employees-color);
+        }
+        /* 활성화된 메뉴 표시기 */
+        .navbar-nav .nav-item .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        /* 각 메뉴별 아이콘 색상 */
+        .menu-icon {
+            margin-right: 8px;
+        }
+        .dashboard-icon {
+            color: var(--dashboard-color);
+        }
+        .products-icon {
+            color: var(--products-color);
+        }
+        .customers-icon {
+            color: var(--customers-color);
+        }
+        .orders-icon {
+            color: var(--orders-color);
+        }
+        .employees-icon {
+            color: var(--employees-color);
+        }
+        /* 활성화된 메뉴의 아이콘 색상 */
+        .nav-link.active .menu-icon {
+            color: white;
+        }
+        .form-container {
+            max-width: 700px;
+            margin: 30px auto;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            background-color: white;
+        }
+        .form-title {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #4e73df;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .btn-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .page-header {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e3e6f0;
+            padding-bottom: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 네비게이션 바 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white rounded">
+            <div class="container-fluid p-0">
+                <a class="navbar-brand text-white" href="/">WMS 시스템</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link dashboard-link" href="/dashboard">
+                                <i class="bi bi-speedometer2 menu-icon dashboard-icon"></i>대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link products-link" href="/">
+                                <i class="bi bi-box menu-icon products-icon"></i>제품 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link customers-link active" href="/customers">
+                                <i class="bi bi-building menu-icon customers-icon"></i>업체 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link orders-link" href="/orders">
+                                <i class="bi bi-cart-check menu-icon orders-icon"></i>제품 주문
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link employees-link" href="/employees">
+                                <i class="bi bi-people menu-icon employees-icon"></i>직원 관리
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <h1 class="page-header">
+            <i class="bi bi-pencil-square text-warning"></i> 업체 정보 수정
+        </h1>
+
+        <!-- 플래시 메시지 표시 -->
+        <div class="mt-3">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <div class="form-container">
+            <h2 class="form-title">업체 정보 수정</h2>
+            <form method="POST" action="{{ url_for('edit_customer', customer_id=customer.customer_id) }}">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="customer_id">업체 ID</label>
+                            <input type="text" class="form-control" id="customer_id" name="customer_id" value="{{ customer.customer_id }}" readonly>
+                            <small class="text-muted">업체 ID는 수정할 수 없습니다</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="company_name">업체명</label>
+                            <input type="text" class="form-control" id="company_name" name="company_name" value="{{ customer.company_name }}" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="manager_name">담당자</label>
+                            <input type="text" class="form-control" id="manager_name" name="contact_name" value="{{ customer.contact_name }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="phone">연락처</label>
+                            <input type="text" class="form-control" id="phone" name="contact_phone" value="{{ customer.contact_phone }}" placeholder="010-0000-0000">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="email">이메일</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ customer.email }}" placeholder="example@domain.com">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="address">주소</label>
+                            <input type="text" class="form-control" id="address" name="address" value="{{ customer.address }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="register_date">가입일</label>
+                            <input type="text" class="form-control" value="{{ customer.register_date.strftime('%m/%d/%Y') }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="total_purchase_amount">누적 주문액</label>
+                            <input type="text" class="form-control" value="${{ "{:,.2f}".format(customer.total_purchase_amount) }}" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="status">고객 상태</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="잠재고객" {% if customer.status == '잠재고객' %}selected{% endif %}>잠재고객</option>
+                                <option value="활성고객" {% if customer.status == '활성고객' %}selected{% endif %}>활성고객</option>
+                                <option value="휴면고객" {% if customer.status == '휴면고객' %}selected{% endif %}>휴면고객</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="payment_term">결제 방법</label>
+                            <input type="text" class="form-control" id="payment_term" name="payment_term" value="{{ customer.payment_term }}" placeholder="예: 30일 이내 현금결제, 선입금, 월말결제">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="employee_id">담당 직원</label>
+                            <select class="form-select" id="employee_id" name="employee_id">
+                                <option value="">-- 담당 직원 선택 --</option>
+                                {% for employee in employees %}
+                                    <option value="{{ employee.id }}" {% if customer.employee_id == employee.id %}selected{% endif %}>{{ employee.name }} ({{ employee.position or '직책 없음' }}, {{ employee.department or '부서 없음' }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label for="note">메모</label>
+                    <textarea class="form-control" id="note" name="note" rows="3">{{ customer.note }}</textarea>
+                </div>
+
+                <div class="btn-container">
+                    <a href="{{ url_for('customers') }}" class="btn btn-secondary">취소</a>
+                    <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

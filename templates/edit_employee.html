@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS - 직원 수정</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">WMS 시스템</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">제품 목록</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/customers">업체 목록</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">대시보드</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/employees">직원 관리</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">직원 정보 수정</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- 플래시 메시지 표시 -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <form method="POST" action="/edit_employee/{{ employee.id }}">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="employee_id" class="form-label">직원 고유 ID <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="employee_id" name="employee_id" value="{{ employee.employee_id }}" required readonly disabled>
+                                    <div class="form-text">직원 고유 ID는 변경할 수 없습니다.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="name" class="form-label">이름 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="name" name="name" value="{{ employee.name }}" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="position" class="form-label">직책</label>
+                                    <input type="text" class="form-control" id="position" name="position" value="{{ employee.position }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="department" class="form-label">부서</label>
+                                    <input type="text" class="form-control" id="department" name="department" value="{{ employee.department }}">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="phone" class="form-label">연락처 <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" value="{{ employee.phone }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">이메일</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ employee.email }}">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="hire_date" class="form-label">입사일 <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="hire_date" name="hire_date" value="{{ employee.hire_date.strftime('%Y-%m-%d') }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="status" class="form-label">상태 <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="status" name="status" required>
+                                        <option value="재직중" {% if employee.status == '재직중' %}selected{% endif %}>재직중</option>
+                                        <option value="휴직중" {% if employee.status == '휴직중' %}selected{% endif %}>휴직중</option>
+                                        <option value="퇴사" {% if employee.status == '퇴사' %}selected{% endif %}>퇴사</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="address" class="form-label">주소</label>
+                                <input type="text" class="form-control" id="address" name="address" value="{{ employee.address }}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">비고</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3">{{ employee.notes }}</textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="/employees" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> 목록으로 돌아가기
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> 저장
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 전화번호 자동 포맷팅 함수
+        document.getElementById('phone').addEventListener('input', function(e) {
+            // 숫자만 추출
+            const numericValue = this.value.replace(/\D/g, '');
+            
+            // 숫자 길이에 따라 포맷팅
+            if (numericValue.length <= 3) {
+                this.value = numericValue;
+            } else if (numericValue.length <= 6) {
+                this.value = numericValue.slice(0, 3) + '-' + numericValue.slice(3);
+            } else {
+                this.value = numericValue.slice(0, 3) + '-' + numericValue.slice(3, 6) + '-' + numericValue.slice(6, 10);
+            }
+        });
+
+        // 날짜 포맷 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateFormat = "{{ js_date_format }}";
+            const hireDateInput = document.getElementById('hire_date');
+            
+            // 날짜 포맷 변환 함수
+            function formatDate(date, format) {
+                const d = new Date(date);
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                
+                if (format === 'mm/dd/yyyy') {
+                    return `${month}/${day}/${year}`;
+                } else if (format === 'dd/mm/yyyy') {
+                    return `${day}/${month}/${year}`;
+                } else {
+                    return `${year}-${month}-${day}`;
+                }
+            }
+            
+            // 기존 날짜를 적절한 형식으로 표시
+            const currentDate = hireDateInput.value;
+            if (currentDate && dateFormat !== 'yyyy-mm-dd') {
+                // ISO 형식(YYYY-MM-DD)에서 설정된 형식으로 변환
+                const [year, month, day] = currentDate.split('-');
+                const dateObj = new Date(year, month - 1, day);
+                
+                hireDateInput.type = 'text';
+                hireDateInput.value = formatDate(dateObj, dateFormat);
+                hireDateInput.placeholder = dateFormat;
+            }
+        });
+    </script>
+</body>
+</html> 

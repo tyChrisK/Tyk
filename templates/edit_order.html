@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS - 주문 수정</title>
+    <!-- 부트스트랩 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 부트스트랩 아이콘 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- 데이트피커 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        :root {
+            --dashboard-color: #4e73df;
+            --products-color: #1cc88a;
+            --customers-color: #f6c23e;
+            --orders-color: #e74a3b;
+            --employees-color: #36b9cc;
+        }
+        body {
+            background-color: #f8f9fc;
+        }
+        .navbar {
+            margin-bottom: 30px;
+            padding: 0;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .navbar-brand {
+            padding: 15px 20px;
+            background-color: #4e73df;
+            margin-right: 0;
+            font-weight: bold;
+        }
+        .navbar-nav .nav-item .nav-link {
+            padding: 15px 20px;
+            position: relative;
+            transition: all 0.3s ease;
+            color: #6e707e;
+            font-weight: 500;
+        }
+        .navbar-nav .nav-item .nav-link:hover {
+            color: #333;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        /* 각 메뉴별 활성화 스타일 */
+        .navbar-nav .nav-item .nav-link.dashboard-link.active {
+            color: white;
+            background-color: var(--dashboard-color);
+        }
+        .navbar-nav .nav-item .nav-link.products-link.active {
+            color: white;
+            background-color: var(--products-color);
+        }
+        .navbar-nav .nav-item .nav-link.customers-link.active {
+            color: white;
+            background-color: var(--customers-color);
+        }
+        .navbar-nav .nav-item .nav-link.orders-link.active {
+            color: white;
+            background-color: var(--orders-color);
+        }
+        .navbar-nav .nav-item .nav-link.employees-link.active {
+            color: white;
+            background-color: var(--employees-color);
+        }
+        /* 활성화된 메뉴 표시기 */
+        .navbar-nav .nav-item .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        /* 각 메뉴별 아이콘 색상 */
+        .menu-icon {
+            margin-right: 8px;
+        }
+        .dashboard-icon {
+            color: var(--dashboard-color);
+        }
+        .products-icon {
+            color: var(--products-color);
+        }
+        .customers-icon {
+            color: var(--customers-color);
+        }
+        .orders-icon {
+            color: var(--orders-color);
+        }
+        .employees-icon {
+            color: var(--employees-color);
+        }
+        /* 활성화된 메뉴의 아이콘 색상 */
+        .nav-link.active .menu-icon {
+            color: white;
+        }
+        .page-header {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e3e6f0;
+            padding-bottom: 15px;
+        }
+        .form-section {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .items-table {
+            margin-top: 20px;
+        }
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+        .item-row {
+            transition: background-color 0.2s;
+        }
+        .item-row:hover {
+            background-color: #f1f1f1;
+        }
+        .delete-item {
+            cursor: pointer;
+            color: #dc3545;
+        }
+        .delete-item:hover {
+            color: #b02a37;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 네비게이션 바 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white rounded">
+            <div class="container-fluid p-0">
+                <a class="navbar-brand text-white" href="/">WMS 시스템</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link dashboard-link" href="/dashboard">
+                                <i class="bi bi-speedometer2 menu-icon dashboard-icon"></i>대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link products-link" href="/">
+                                <i class="bi bi-box menu-icon products-icon"></i>제품 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link customers-link" href="/customers">
+                                <i class="bi bi-building menu-icon customers-icon"></i>업체 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link orders-link active" href="/orders">
+                                <i class="bi bi-cart-check menu-icon orders-icon"></i>제품 주문
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link employees-link" href="/employees">
+                                <i class="bi bi-people menu-icon employees-icon"></i>직원 관리
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <h1 class="page-header">
+            <i class="bi bi-pencil-square text-danger"></i> 주문 수정
+        </h1>
+        
+        <!-- 알림 메시지 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form id="editOrderForm" method="POST" action="{{ url_for('edit_order', order_id=order.order_id) }}">
+            <!-- 주문 기본 정보 -->
+            <div class="form-section">
+                <h4 class="mb-3">주문 기본 정보</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="order_id" class="form-label">주문 번호</label>
+                        <input type="text" class="form-control" id="order_id" value="{{ order.order_id }}" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="customer_id" class="form-label required-field">고객사</label>
+                        <select class="form-select" id="customer_id" name="customer_id" required>
+                            <option value="">고객사 선택</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.customer_id }}" {% if order.customer_id == customer.customer_id %}selected{% endif %}>
+                                {{ customer.company_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="order_date" class="form-label">주문일 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="order_date" name="order_date" value="{{ order.order_date }}" readonly required>
+                                <button type="button" class="btn btn-outline-secondary calendar-btn" id="order_date_btn">
+                                    <i class="bi bi-calendar"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="delivery_date" class="form-label">배송 예정일</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="delivery_date" name="delivery_date" value="{{ order.delivery_date or '' }}" readonly>
+                                <button type="button" class="btn btn-outline-secondary calendar-btn" id="delivery_date_btn">
+                                    <i class="bi bi-calendar"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="status" class="form-label required-field">상태</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="준비중" {% if order.status == '준비중' %}selected{% endif %}>준비중</option>
+                            <option value="배송중" {% if order.status == '배송중' %}selected{% endif %}>배송중</option>
+                            <option value="완료" {% if order.status == '완료' %}selected{% endif %}>완료</option>
+                            <option value="취소" {% if order.status == '취소' %}selected{% endif %}>취소</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="employee_id" class="form-label">담당 직원</label>
+                        <select class="form-select" id="employee_id" name="employee_id">
+                            <option value="">담당 직원 선택</option>
+                            {% for employee in employees %}
+                            <option value="{{ employee.id }}" {% if order.employee_id == employee.id %}selected{% endif %}>
+                                {{ employee.name }} ({{ employee.department }} - {{ employee.position }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="notes" class="form-label">비고</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2">{{ order.note }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 주문 상품 정보 -->
+            <div class="form-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>주문 상품 목록</h4>
+                    <button type="button" id="addItemBtn" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle"></i> 상품 추가
+                    </button>
+                </div>
+                
+                <div class="table-responsive items-table">
+                    <table class="table table-bordered" id="orderItemsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 40%;">제품</th>
+                                <th style="width: 20%;">단가(원)</th>
+                                <th style="width: 15%;">수량</th>
+                                <th style="width: 20%;">소계(원)</th>
+                                <th style="width: 5%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderItemsBody">
+                            {% if order.order_items %}
+                                {% for item in order.order_items %}
+                                <tr class="item-row">
+                                    <td>
+                                        <select class="form-select product-select" name="product_id[]" required>
+                                            <option value="">제품 선택</option>
+                                            {% for product in products %}
+                                            <option value="{{ product.product_id }}" 
+                                                    data-price="{{ product.selling_price }}"
+                                                    {% if item.product_id == product.product_id %}selected{% endif %}>
+                                                {{ product.product_name }} ({{ product.product_id }})
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control unit-price" name="unit_price[]" 
+                                               value="{{ item.unit_price|int }}" min="0" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control quantity" name="quantity[]" 
+                                               value="{{ item.quantity }}" min="1" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control subtotal" name="subtotal[]" 
+                                               value="{{ item.subtotal|int }}" readonly>
+                                    </td>
+                                    <td class="text-center">
+                                        <i class="bi bi-trash delete-item"></i>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="item-row">
+                                    <td>
+                                        <select class="form-select product-select" name="product_id[]" required>
+                                            <option value="">제품 선택</option>
+                                            {% for product in products %}
+                                            <option value="{{ product.product_id }}" data-price="{{ product.selling_price }}">
+                                                {{ product.product_name }} ({{ product.product_id }})
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control unit-price" name="unit_price[]" value="0" min="0" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control quantity" name="quantity[]" value="1" min="1" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control subtotal" name="subtotal[]" value="0" readonly>
+                                    </td>
+                                    <td class="text-center">
+                                        <i class="bi bi-trash delete-item"></i>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-secondary">
+                                <td colspan="3" class="text-end fw-bold">총액:</td>
+                                <td colspan="2">
+                                    <input type="number" id="totalAmount" class="form-control" value="{{ order.total_amount|int }}" readonly>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4 mb-5">
+                <a href="{{ url_for('view_order', order_id=order.order_id) }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> 취소
+                </a>
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="bi bi-save"></i> 변경사항 저장
+                </button>
+            </div>
+        </form>
+
+        <!-- 제품 템플릿 (복제용) -->
+        <template id="itemRowTemplate">
+            <tr class="item-row">
+                <td>
+                    <select class="form-select product-select" name="product_id[]" required>
+                        <option value="">제품 선택</option>
+                        {% for product in products %}
+                        <option value="{{ product.product_id }}" data-price="{{ product.selling_price }}">
+                            {{ product.product_name }} ({{ product.product_id }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" class="form-control unit-price" name="unit_price[]" value="0" min="0" required>
+                </td>
+                <td>
+                    <input type="number" class="form-control quantity" name="quantity[]" value="1" min="1" required>
+                </td>
+                <td>
+                    <input type="number" class="form-control subtotal" name="subtotal[]" value="0" readonly>
+                </td>
+                <td class="text-center">
+                    <i class="bi bi-trash delete-item"></i>
+                </td>
+            </tr>
+        </template>
+    </div>
+
+    <!-- 부트스트랩 JS, jQuery 및 Flatpickr -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+    <script>
+        $(document).ready(function() {
+            // 오늘 날짜 구하기
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const formattedToday = `${mm}/${dd}/${yyyy}`;
+            
+            // Datepicker 한국어 설정
+            $.datepicker.regional['ko'] = {
+                closeText: '닫기',
+                prevText: '이전달',
+                nextText: '다음달',
+                currentText: '오늘',
+                monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                dayNames: ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'],
+                dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
+                dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+                weekHeader: 'Wk',
+                dateFormat: 'mm/dd/yy',
+                firstDay: 0,
+                isRTL: false,
+                showMonthAfterYear: true,
+                yearSuffix: '년'
+            };
+            $.datepicker.setDefaults($.datepicker.regional['ko']);
+            
+            // 주문일 달력 설정
+            $('#order_date').datepicker({
+                minDate: 0, // 오늘부터 선택 가능
+                onSelect: function(selectedDate) {
+                    // 배송 예정일의 최소 날짜를 주문일로 설정
+                    $('#delivery_date').datepicker('option', 'minDate', selectedDate);
+                    
+                    // 배송 예정일이 주문일보다 이전이면 주문일로 변경
+                    const deliveryDate = $('#delivery_date').val();
+                    if (deliveryDate && new Date(deliveryDate) < new Date(selectedDate)) {
+                        $('#delivery_date').val(selectedDate);
+                    }
+                }
+            });
+            
+            // 배송 예정일 달력 설정
+            $('#delivery_date').datepicker({
+                minDate: $('#order_date').val() // 주문일 이후로만 선택 가능
+            });
+            
+            // 달력 버튼 클릭 시 달력 표시
+            $('#order_date_btn').on('click', function() {
+                $('#order_date').datepicker('show');
+            });
+            
+            $('#delivery_date_btn').on('click', function() {
+                $('#delivery_date').datepicker('show');
+            });
+            
+            // 폼 제출 시 유효성 검사
+            $('#editOrderForm').on('submit', function(e) {
+                if ($('#order_date').val()) {
+                    // 주문일 유효성 검사
+                    const orderDate = new Date($('#order_date').val());
+                    orderDate.setHours(0, 0, 0, 0);
+                    
+                    const todayDate = new Date();
+                    todayDate.setHours(0, 0, 0, 0);
+                    
+                    if (orderDate < todayDate) {
+                        alert("오늘 이전의 날짜는 선택할 수 없습니다.");
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+                
+                // 항목이 하나 이상 있는지 확인
+                if ($("#orderItemsBody tr").length === 0) {
+                    alert("주문 상품을 하나 이상 추가해주세요.");
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // 모든 항목이 제품을 선택했는지 확인
+                let valid = true;
+                $(".product-select").each(function() {
+                    if ($(this).val() === "") {
+                        alert("모든 항목에 제품을 선택해주세요.");
+                        $(this).focus();
+                        valid = false;
+                        return false;
+                    }
+                });
+                
+                if (!valid) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                return true;
+            });
+
+            // 제품 데이터를 JavaScript 변수로 저장
+            const products = [
+                {% for product in products %}
+                {
+                    product_id: "{{ product.product_id }}",
+                    product_name: "{{ product.product_name }}",
+                    selling_price: {{ product.selling_price }}
+                },
+                {% endfor %}
+            ];
+
+            // 상품 항목 추가
+            $("#addItemBtn").click(function() {
+                const template = document.getElementById('itemRowTemplate');
+                const clone = document.importNode(template.content, true);
+                $("#orderItemsBody").append(clone);
+                
+                // 이벤트 핸들러 다시 바인딩
+                bindEventHandlers();
+                updateTotalAmount();
+            });
+
+            // 처음 로딩시 이벤트 핸들러 바인딩
+            bindEventHandlers();
+            
+            // 총액 계산
+            updateTotalAmount();
+        });
+        
+        // 이벤트 핸들러 바인딩 함수
+        function bindEventHandlers() {
+            // 제품 선택 시 단가 업데이트
+            $(".product-select").off('change').on('change', function() {
+                const price = $(this).find(':selected').data('price') || 0;
+                const row = $(this).closest('.item-row');
+                row.find('.unit-price').val(price);
+                calculateSubtotal(row);
+            });
+            
+            // 수량 변경 시 소계 계산
+            $(".quantity, .unit-price").off('input').on('input', function() {
+                calculateSubtotal($(this).closest('.item-row'));
+            });
+            
+            // 항목 삭제 버튼
+            $(".delete-item").off('click').on('click', function() {
+                if ($("#orderItemsBody tr").length > 1) {
+                    $(this).closest('.item-row').remove();
+                    updateTotalAmount();
+                } else {
+                    alert("최소 하나의 상품 항목이 필요합니다.");
+                }
+            });
+        }
+        
+        // 소계 계산 함수
+        function calculateSubtotal(row) {
+            const unitPrice = parseFloat(row.find('.unit-price').val()) || 0;
+            const quantity = parseFloat(row.find('.quantity').val()) || 0;
+            const subtotal = unitPrice * quantity;
+            row.find('.subtotal').val(subtotal);
+            
+            updateTotalAmount();
+        }
+        
+        // 총액 업데이트 함수
+        function updateTotalAmount() {
+            let total = 0;
+            $('.subtotal').each(function() {
+                total += parseFloat($(this).val()) || 0;
+            });
+            $('#totalAmount').val(total);
+        }
+    </script>
+</body>
+</html> 

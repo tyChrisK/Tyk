@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS - 주문 등록</title>
+    <!-- 부트스트랩 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 부트스트랩 아이콘 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- jQuery UI CSS -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <style>
+        :root {
+            --dashboard-color: #4e73df;
+            --products-color: #1cc88a;
+            --customers-color: #f6c23e;
+            --orders-color: #e74a3b;
+            --employees-color: #36b9cc;
+        }
+        body {
+            background-color: #f8f9fc;
+        }
+        .form-section {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .order-items {
+            margin-top: 20px;
+        }
+        .item-row {
+            background-color: #ffffff;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .navbar {
+            margin-bottom: 30px;
+            padding: 0;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .navbar-brand {
+            padding: 15px 20px;
+            background-color: #4e73df;
+            margin-right: 0;
+            font-weight: bold;
+        }
+        .navbar-nav .nav-item .nav-link {
+            padding: 15px 20px;
+            position: relative;
+            transition: all 0.3s ease;
+            color: #6e707e;
+            font-weight: 500;
+        }
+        .navbar-nav .nav-item .nav-link:hover {
+            color: #333;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        /* 각 메뉴별 활성화 스타일 */
+        .navbar-nav .nav-item .nav-link.dashboard-link.active {
+            color: white;
+            background-color: var(--dashboard-color);
+        }
+        .navbar-nav .nav-item .nav-link.products-link.active {
+            color: white;
+            background-color: var(--products-color);
+        }
+        .navbar-nav .nav-item .nav-link.customers-link.active {
+            color: white;
+            background-color: var(--customers-color);
+        }
+        .navbar-nav .nav-item .nav-link.orders-link.active {
+            color: white;
+            background-color: var(--orders-color);
+        }
+        .navbar-nav .nav-item .nav-link.employees-link.active {
+            color: white;
+            background-color: var(--employees-color);
+        }
+        /* 활성화된 메뉴의 아이콘 색상 */
+        .nav-link.active .menu-icon {
+            color: white;
+        }
+        .page-header {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e3e6f0;
+            padding-bottom: 15px;
+        }
+        .search-results {
+            position: absolute;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .product-item {
+            cursor: pointer;
+        }
+        .product-item:hover, .product-item.active {
+            background-color: #f8f9fa;
+        }
+        .search-section {
+            background-color: #f8f9fc;
+            border-color: #d1d3e2 !important;
+        }
+        .selected-product-display {
+            margin-bottom: 0;
+        }
+        .product-table {
+            border: 1px solid #e3e6f0;
+        }
+        /* 제품 검색 결과 스타일 추가 */
+        .product-item.active {
+            background-color: #e9ecef;
+            border-left: 3px solid #4e73df;
+        }
+        /* 선택된 제품 정보가 항상 보이도록 */
+        .search-results {
+            position: absolute;
+            width: 100%;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .navbar-nav .nav-item .nav-link.employees-link.active {
+            color: white;
+            background-color: var(--employees-color);
+        }
+        /* 활성화된 메뉴 표시기 */
+        .navbar-nav .nav-item .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        /* 각 메뉴별 아이콘 색상 */
+        .menu-icon {
+            margin-right: 8px;
+        }
+        .dashboard-icon {
+            color: var(--dashboard-color);
+        }
+        .products-icon {
+            color: var(--products-color);
+        }
+        .customers-icon {
+            color: var(--customers-color);
+        }
+        .orders-icon {
+            color: var(--orders-color);
+        }
+        .employees-icon {
+            color: var(--employees-color);
+        }
+        /* 활성화된 메뉴의 아이콘 색상 */
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- 네비게이션 바 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white rounded">
+            <div class="container-fluid p-0">
+                <a class="navbar-brand text-white" href="/">WMS 시스템</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link dashboard-link" href="/dashboard">
+                                <i class="bi bi-speedometer2 menu-icon dashboard-icon"></i>대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link products-link" href="/">
+                                <i class="bi bi-box menu-icon products-icon"></i>제품 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link customers-link" href="/customers">
+                                <i class="bi bi-building menu-icon customers-icon"></i>업체 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link orders-link active" href="/orders">
+                                <i class="bi bi-cart-check menu-icon orders-icon"></i>제품 주문
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link employees-link" href="/employees">
+                                <i class="bi bi-people menu-icon employees-icon"></i>직원 관리
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <h1 class="page-header">
+            <i class="bi bi-cart-plus text-danger"></i> 주문 등록
+        </h1>
+
+        <!-- 알림 메시지 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form id="orderForm" method="POST" action="{{ url_for('add_order') }}">
+            <!-- 주문 기본 정보 -->
+            <div class="form-section">
+                <h3 class="mb-3">주문 기본 정보</h3>
+                <div class="row mt-4">
+                    <div class="col-md-4 mb-3">
+                        <label for="manual_order_id" class="form-label">주문 번호</label>
+                        <input type="text" class="form-control" id="manual_order_id" name="manual_order_id" placeholder="자동으로 생성됩니다">
+                        <small class="form-text text-muted">비워두면 시스템이 자동으로 번호를 생성합니다.</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="customer_id" class="form-label required">업체명</label>
+                        <select class="form-select" id="customer_id" name="customer_id" required>
+                            <option value="">업체 선택</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.customer_id }}">{{ customer.company_name }} {% if customer.contact_name %}({{ customer.contact_name }}){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">업체를 선택해주세요.</div>
+                        <small id="customerInfo" class="form-text text-muted mt-1 d-none">
+                            <i class="bi bi-info-circle"></i> <span id="customerInfoText"></span>
+                        </small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="status" class="form-label">주문 상태</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="신규">신규</option>
+                            <option value="처리중">처리중</option>
+                            <option value="배송중">배송중</option>
+                            <option value="완료">완료</option>
+                            <option value="취소">취소</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="order_date" class="form-label required">주문 날짜</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="order_date" name="order_date" value="{{ today }}" required readonly>
+                            <button class="btn btn-outline-secondary calendar-button" type="button" id="orderDateButton">
+                                <i class="bi bi-calendar"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="delivery_date" class="form-label">배송 예정일</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="delivery_date" name="delivery_date" readonly>
+                            <button class="btn btn-outline-secondary calendar-button" type="button" id="deliveryDateButton">
+                                <i class="bi bi-calendar"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="employee_id" class="form-label">담당 직원</label>
+                        <select class="form-select" id="employee_id" name="employee_id">
+                            <option value="">담당자 선택</option>
+                            {% for employee in employees %}
+                            <option value="{{ employee.id }}">{{ employee.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <small id="employeeInfo" class="form-text text-success d-none"></small>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="notes" class="form-label">주문 메모</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 주문 상품 목록 -->
+            <div class="form-section order-items">
+                <h3 class="mb-3">주문 상품 목록</h3>
+                
+                <!-- 제품 검색 섹션 -->
+                <div class="search-section mb-4 p-3 border rounded bg-light">
+                    <h5 class="mb-3">제품 검색 및 추가</h5>
+                    <div class="position-relative mb-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control product-search" id="mainProductSearch" placeholder="제품을 검색하세요 (ID, 이름, 영문명, 담당자)" autocomplete="off">
+                            <button class="btn btn-outline-primary product-search-btn" type="button">
+                                <i class="bi bi-search"></i> 검색
+                            </button>
+                        </div>
+                        <div class="search-results d-none" id="mainSearchResults" tabindex="-1">
+                            <ul class="list-group"></ul>
+                        </div>
+                    </div>
+                    
+                    <div id="selectedProductInfo" class="d-none mb-3">
+                        <div class="selected-product-display alert alert-success py-2 mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div><strong id="selectedProductId"></strong>: <span id="selectedProductName"></span></div>
+                                <div>$<span id="selectedProductPrice"></span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">단가</label>
+                                <input type="number" class="form-control" id="selectedProductUnitPrice" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">수량 <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="selectedProductQuantity" value="1" min="1" step="1">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">소계</label>
+                                <input type="number" class="form-control" id="selectedProductSubtotal" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <button type="button" class="btn btn-success" id="addSelectedProductBtn">
+                                <i class="bi bi-plus-circle"></i> 상품 추가
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 추가된 상품 목록 -->
+                <div class="mb-3">
+                    <h5 class="mb-3">추가된 상품 목록</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="productTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>제품 ID</th>
+                                    <th>제품명</th>
+                                    <th>단가</th>
+                                    <th>수량</th>
+                                    <th>소계</th>
+                                    <th>작업</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productTableBody">
+                                <!-- 여기에 상품이 추가됩니다 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="emptyProductMessage" class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 추가된 상품이 없습니다. 위 검색창에서 상품을 검색하여 추가해주세요.
+                    </div>
+                </div>
+                
+                <div class="row justify-content-end mt-4">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">총 금액</label>
+                            <input type="text" class="form-control form-control-lg" id="totalAmount" readonly>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 실제 폼 데이터 (숨겨진 필드) -->
+                <div id="hiddenFormFields">
+                    <!-- 여기에 hidden input 필드들이 추가됩니다 -->
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4 mb-5">
+                <a href="{{ url_for('orders') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> 주문 목록으로
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> 주문 등록
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 부트스트랩 & jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    
+    <script>
+        $(document).ready(function() {
+            // 오늘 날짜 구하기
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const formattedToday = `${mm}/${dd}/${yyyy}`;
+            
+            // 주문일 기본값 설정
+            $('#order_date').val(formattedToday);
+            
+            // Datepicker 한국어 설정
+            $.datepicker.regional['ko'] = {
+                closeText: '닫기',
+                prevText: '이전달',
+                nextText: '다음달',
+                currentText: '오늘',
+                monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                dayNames: ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'],
+                dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
+                dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+                weekHeader: 'Wk',
+                dateFormat: 'mm/dd/yy',
+                firstDay: 0,
+                isRTL: false,
+                showMonthAfterYear: true,
+                yearSuffix: '년'
+            };
+            $.datepicker.setDefaults($.datepicker.regional['ko']);
+            
+            // 주문일 달력 설정
+            $('#order_date').datepicker({
+                minDate: 0, // 오늘부터 선택 가능
+                onSelect: function(selectedDate) {
+                    // 배송 예정일의 최소 날짜를 주문일로 설정
+                    $('#delivery_date').datepicker('option', 'minDate', selectedDate);
+                    
+                    // 배송 예정일이 주문일보다 이전이면 주문일로 변경
+                    const deliveryDate = $('#delivery_date').val();
+                    if (deliveryDate && new Date(deliveryDate) < new Date(selectedDate)) {
+                        $('#delivery_date').val(selectedDate);
+                    }
+                }
+            });
+            
+            // 배송 예정일 달력 설정
+            $('#delivery_date').datepicker({
+                minDate: $('#order_date').val() // 주문일 이후로만 선택 가능
+            });
+            
+            // 달력 버튼 클릭 시 달력 표시
+            $('#orderDateButton').on('click', function() {
+                $('#order_date').datepicker('show');
+            });
+            
+            $('#deliveryDateButton').on('click', function() {
+                $('#delivery_date').datepicker('show');
+            });
+            
+            // 수동 주문 번호 입력 필드 개선
+            $('#manual_order_id').on('input', function() {
+                // 입력시 숫자와 문자를 대문자로 변환
+                $(this).val($(this).val().toUpperCase());
+            });
+            
+            // 폼 제출 시 유효성 검사
+            $('#orderForm').on('submit', function(e) {
+                // 항목이 하나 이상 있는지 확인
+                if ($("#productTableBody tr").length === 0) {
+                    alert("주문 상품을 하나 이상 추가해주세요.");
+                    e.preventDefault();
+                    return false;
+                }
+                
+                return true;
+            });
+
+            // 제품 데이터를 JavaScript 변수로 저장
+            const products = [
+                {% for product in products %}
+                {
+                    id: "{{ product.product_id }}",
+                    name: "{{ product.product_name }}",
+                    nameEn: "{{ product.product_name_en }}",
+                    price: {{ product.selling_price }},
+                    employee: "{{ product.employee.name if product.employee else '' }}"
+                },
+                {% endfor %}
+            ];
+            
+            // 장바구니 배열 (추가된 상품 목록)
+            let cartItems = [];
+            
+            // 현재 선택된 제품
+            let selectedProduct = null;
+            
+            // 고객사 선택 시 담당 직원 자동 선택
+            $('#customer_id').change(function() {
+                const customerId = $(this).val();
+                if (customerId) {
+                    // 선택된 업체 정보 표시 (선택된 텍스트 가져오기)
+                    const selectedText = $('#customer_id option:selected').text();
+                    $('#customerInfoText').text(selectedText);
+                    $('#customerInfo').removeClass('d-none');
+                    
+                    // AJAX로 고객의 담당 직원 정보 가져오기
+                    $.ajax({
+                        url: `/api/get_customer_employee/${customerId}`,
+                        method: 'GET',
+                        success: function(response) {
+                            if (response.success) {
+                                // 담당 직원 선택
+                                if (response.employee_id) {
+                                    $('#employee_id').val(response.employee_id);
+                                    
+                                    // 담당자 이름이 있는 경우 표시
+                                    if (response.employee_name) {
+                                        const employeeSelect = $('#employee_id');
+                                        // 선택된 옵션의 텍스트를 업데이트
+                                        const selectedOption = employeeSelect.find('option:selected');
+                                        if (selectedOption.length) {
+                                            // 담당자 표시를 위해 상태 메시지 추가
+                                            $('#employeeInfo').removeClass('d-none')
+                                                .text(`담당자: ${response.employee_name}`);
+                                        }
+                                    }
+                                } else {
+                                    $('#employee_id').val('');
+                                    $('#employeeInfo').addClass('d-none');
+                                }
+                                
+                                // 고객사의 메모 정보 주문 메모에 설정
+                                $('#notes').val(response.note);
+                            } else {
+                                // 오류 발생 시 초기화
+                                $('#employee_id').val('');
+                                $('#employeeInfo').addClass('d-none');
+                                $('#notes').val('');
+                            }
+                        },
+                        error: function() {
+                            console.error('업체 정보를 가져오는 데 실패했습니다.');
+                            $('#employee_id').val('');
+                            $('#employeeInfo').addClass('d-none');
+                            $('#notes').val('');
+                        }
+                    });
+                } else {
+                    // 고객사 선택 취소 시 초기화
+                    $('#employee_id').val('');
+                    $('#employeeInfo').addClass('d-none');
+                    $('#customerInfo').addClass('d-none');
+                    $('#notes').val('');
+                }
+            });
+            
+            // 검색 결과 표시 함수
+            function showSearchResults(searchText) {
+                const resultsContainer = $('#mainSearchResults');
+                const resultsUl = resultsContainer.find('ul');
+                resultsUl.empty();
+                
+                if (!searchText.trim()) {
+                    resultsContainer.addClass('d-none');
+                    return;
+                }
+                
+                const searchLower = searchText.toLowerCase();
+                const filteredProducts = products.filter(product => 
+                    product.id.toLowerCase().includes(searchLower) || 
+                    product.name.toLowerCase().includes(searchLower) || 
+                    product.nameEn.toLowerCase().includes(searchLower) || 
+                    product.employee.toLowerCase().includes(searchLower)
+                );
+                
+                if (filteredProducts.length === 0) {
+                    resultsUl.append(`<li class="list-group-item">검색 결과가 없습니다</li>`);
+                } else {
+                    filteredProducts.forEach(product => {
+                        resultsUl.append(`
+                            <li class="list-group-item product-item" 
+                                data-id="${product.id}" 
+                                data-name="${product.name}" 
+                                data-name-en="${product.nameEn}" 
+                                data-price="${product.price}">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>${product.id}</strong>: ${product.name} 
+                                        ${product.nameEn ? `(${product.nameEn})` : ''}
+                                    </div>
+                                    <div>$${product.price.toLocaleString()}</div>
+                                </div>
+                                ${product.employee ? `<small class="text-muted">담당: ${product.employee}</small>` : ''}
+                            </li>
+                        `);
+                    });
+                }
+                
+                resultsContainer.removeClass('d-none');
+            }
+            
+            // 제품 선택 함수
+            function selectProduct(item) {
+                const productId = item.data('id');
+                const productName = item.data('name');
+                const productNameEn = item.data('name-en');
+                const price = parseFloat(item.data('price'));
+                
+                selectedProduct = {
+                    id: productId,
+                    name: productName,
+                    nameEn: productNameEn,
+                    price: price
+                };
+                
+                // 제품 정보 표시
+                $('#selectedProductId').text(productId);
+                $('#selectedProductName').text(productName + (productNameEn ? ` (${productNameEn})` : ''));
+                $('#selectedProductPrice').text(price.toLocaleString());
+                $('#selectedProductUnitPrice').val(price);
+                $('#selectedProductQuantity').val(1);
+                $('#selectedProductSubtotal').val(price);
+                
+                // 선택된 제품 정보 섹션 표시
+                $('#selectedProductInfo').removeClass('d-none');
+                
+                // 검색 결과 숨기기
+                $('#mainSearchResults').addClass('d-none');
+                
+                // 자동으로 수량 입력 필드로 포커스 이동 및 텍스트 선택
+                $('#selectedProductQuantity').focus().select();
+            }
+            
+            // 폼 데이터 업데이트 함수
+            function updateFormFields() {
+                $('#hiddenFormFields').empty();
+                
+                cartItems.forEach((item, index) => {
+                    $('#hiddenFormFields').append(`
+                        <input type="hidden" name="product_id[]" value="${item.id}">
+                        <input type="hidden" name="unit_price[]" value="${parseFloat(item.price)}">
+                        <input type="hidden" name="quantity[]" value="${parseInt(item.quantity)}">
+                    `);
+                });
+            }
+            
+            // 상품 추가 함수
+            function addProductToCart() {
+                // 선택된 제품 정보 가져오기
+                const productId = $('#selectedProductId').text();
+                const productName = $('#selectedProductName').text();
+                const unitPrice = parseFloat($('#selectedProductUnitPrice').val()) || 0;
+                const quantity = parseInt($('#selectedProductQuantity').val()) || 1;
+                
+                // 소계 계산
+                const subtotal = unitPrice * quantity;
+                
+                // 유효성 검사
+                if (!productId || productId.trim() === '') {
+                    showToast('제품을 먼저 선택해주세요.', 'warning');
+                    return;
+                }
+                
+                if (quantity <= 0) {
+                    showToast('수량은 1개 이상이어야 합니다.', 'warning');
+                    return;
+                }
+                
+                // 이미 카트에 있는 상품인지 확인
+                const existingItemIndex = cartItems.findIndex(item => item.id === productId);
+                
+                if (existingItemIndex !== -1) {
+                    // 이미 있는 상품이면 수량과 소계 업데이트
+                    cartItems[existingItemIndex].quantity += quantity;
+                    cartItems[existingItemIndex].subtotal = cartItems[existingItemIndex].price * cartItems[existingItemIndex].quantity;
+                    
+                    // 테이블에서 해당 행 업데이트
+                    const row = $(`#productTableBody tr[data-product-id="${productId}"]`);
+                    if (row.length) {
+                        row.find('td:nth-child(4)').text(cartItems[existingItemIndex].quantity);
+                        row.find('td:nth-child(5)').text(formatCurrency(cartItems[existingItemIndex].subtotal));
+                    }
+                } else {
+                    // 새로운 상품이면 카트에 추가
+                    const newItem = {
+                        id: productId,
+                        name: productName,
+                        price: unitPrice,
+                        quantity: quantity,
+                        subtotal: subtotal
+                    };
+                    
+                    cartItems.push(newItem);
+                    
+                    // 테이블에 새 행 추가
+                    $('#productTableBody').append(`
+                        <tr data-product-id="${productId}" data-index="${cartItems.length - 1}">
+                            <td>${productId}</td>
+                            <td>${productName}</td>
+                            <td>${formatCurrency(unitPrice)}</td>
+                            <td>${quantity}</td>
+                            <td>${formatCurrency(subtotal)}</td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-danger btn-sm remove-product" data-index="${cartItems.length - 1}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `);
+                    
+                    // 장바구니가 비어있지 않음을 표시
+                    $('#emptyProductMessage').hide();
+                }
+                
+                // 검색 섹션 리셋
+                resetSearchSection();
+                
+                // 총액 업데이트
+                updateTotalAmount();
+                
+                // 폼 필드 업데이트
+                updateFormFields();
+                
+                // 검색창으로 포커스 이동
+                $('#mainProductSearch').focus();
+            }
+            
+            // 검색 섹션 리셋 함수
+            function resetSearchSection() {
+                // 검색 입력 필드 비우기
+                $('#mainProductSearch').val('');
+                
+                // 선택된 제품 정보 숨기기
+                $('#selectedProductInfo').addClass('d-none');
+                
+                // 선택된 제품 변수 초기화
+                selectedProduct = null;
+            }
+            
+            // 상품 삭제 함수
+            function removeProductFromCart(index) {
+                cartItems.splice(index, 1);
+                
+                // 테이블에서 해당 행 삭제
+                $('#productTableBody tr').eq(index).remove();
+                
+                // 인덱스 업데이트
+                $('#productTableBody tr').each(function(i) {
+                    $(this).attr('data-index', i);
+                    $(this).find('.remove-product').attr('data-index', i);
+                });
+                
+                // 장바구니가 비었는지 확인
+                if (cartItems.length === 0) {
+                    $('#emptyProductMessage').show();
+                }
+                
+                // 폼 데이터 업데이트
+                updateFormFields();
+                
+                // 총 금액 업데이트
+                updateTotalAmount();
+            }
+            
+            // 통화 서식 지정 함수
+            function formatCurrency(amount) {
+                return '$' + parseFloat(amount).toLocaleString();
+            }
+
+            // 천단위 구분기호 추가 함수
+            function addCommas(num) {
+                return parseFloat(num).toLocaleString();
+            }
+
+            // 총 금액 계산 함수
+            function updateTotalAmount() {
+                let total = 0;
+                cartItems.forEach(item => {
+                    total += parseFloat(item.subtotal);
+                });
+                $('#totalAmount').val(formatCurrency(total));
+            }
+            
+            // 소계 업데이트 함수
+            function updateSubtotal() {
+                if (selectedProduct) {
+                    const quantity = parseInt($('#selectedProductQuantity').val()) || 1;
+                    const subtotal = parseFloat(selectedProduct.price) * quantity;
+                    $('#selectedProductSubtotal').val(subtotal.toLocaleString());
+                }
+            }
+            
+            // 검색창에 키 입력 시 검색 결과 표시
+            $('#mainProductSearch').on('input', function() {
+                const searchText = $(this).val();
+                showSearchResults(searchText);
+            });
+            
+            // 검색 버튼 클릭 시 검색 수행
+            $('.product-search-btn').click(function() {
+                const searchText = $('#mainProductSearch').val();
+                showSearchResults(searchText);
+            });
+            
+            // 검색 결과에서 항목 클릭 시 선택
+            $(document).on('click', '.product-item', function() {
+                selectProduct($(this));
+            });
+            
+            // 선택한 상품 추가 버튼 클릭
+            $('#addSelectedProductBtn').click(function() {
+                addProductToCart();
+            });
+            
+            // 상품 삭제 버튼 클릭
+            $(document).on('click', '.remove-product', function() {
+                const index = $(this).data('index');
+                removeProductFromCart(index);
+            });
+            
+            // 수량 변경 시 소계 업데이트
+            $('#selectedProductQuantity').on('input', function() {
+                updateSubtotal();
+            });
+            
+            // Enter 키 누르면 상품 추가
+            $('#selectedProductQuantity').on('keydown', function(e) {
+                if (e.keyCode === 13) {
+                    e.preventDefault();
+                    addProductToCart();
+                }
+            });
+            
+            // 키보드 방향키로 검색 결과 탐색
+            $('#mainProductSearch').on('keydown', function(e) {
+                const resultsContainer = $('#mainSearchResults');
+                
+                if (resultsContainer.hasClass('d-none')) return;
+                
+                const items = resultsContainer.find('.product-item');
+                if (items.length === 0) return;
+                
+                let focusedItem = resultsContainer.find('.product-item.active');
+                let focusIndex = focusedItem.length ? items.index(focusedItem) : -1;
+                
+                // 위쪽 화살표
+                if (e.keyCode === 38) {
+                    e.preventDefault();
+                    if (focusIndex > 0) {
+                        focusIndex--;
+                    } else {
+                        focusIndex = items.length - 1;
+                    }
+                }
+                // 아래쪽 화살표
+                else if (e.keyCode === 40) {
+                    e.preventDefault();
+                    if (focusIndex < items.length - 1) {
+                        focusIndex++;
+                    } else {
+                        focusIndex = 0;
+                    }
+                }
+                // 스페이스바 (선택)
+                else if (e.keyCode === 32 && focusedItem.length) {
+                    e.preventDefault();
+                    selectProduct(focusedItem);
+                    return;
+                }
+                // 엔터키 (선택)
+                else if (e.keyCode === 13 && focusedItem.length) {
+                    e.preventDefault();
+                    selectProduct(focusedItem);
+                    return;
+                }
+                // ESC (취소)
+                else if (e.keyCode === 27) {
+                    resultsContainer.addClass('d-none');
+                    return;
+                }
+                else {
+                    return;
+                }
+                
+                // 활성 항목 표시
+                items.removeClass('active');
+                $(items[focusIndex]).addClass('active');
+                
+                // 만약 포커스된 항목이 있다면 해당 항목을 참조
+                focusedItem = $(items[focusIndex]);
+                
+                // 선택된 항목이 보이도록 스크롤 조정
+                const itemPosition = focusedItem.position().top;
+                const containerHeight = resultsContainer.height();
+                const itemHeight = focusedItem.outerHeight();
+                
+                // 선택된 항목이 컨테이너 아래에 있는 경우
+                if (itemPosition + itemHeight > containerHeight) {
+                    resultsContainer.scrollTop(resultsContainer.scrollTop() + (itemPosition + itemHeight - containerHeight));
+                }
+                // 선택된 항목이 컨테이너 위에 있는 경우
+                else if (itemPosition < 0) {
+                    resultsContainer.scrollTop(resultsContainer.scrollTop() + itemPosition);
+                }
+            });
+            
+            // 검색창 외부 클릭 시 결과 숨기기
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.position-relative').length) {
+                    $('#mainSearchResults').addClass('d-none');
+                }
+            });
+            
+            // 폼 제출 전 유효성 검사
+            $('#orderForm').submit(function(e) {
+                let valid = true;
+                let errorMessage = '';
+                
+                // 필수 필드 확인
+                if (!$('#customer_id').val()) {
+                    errorMessage = '업체를 선택해주세요.';
+                    $('#customer_id').addClass('is-invalid');
+                    valid = false;
+                } else {
+                    $('#customer_id').removeClass('is-invalid');
+                }
+                
+                // 제품 선택 확인
+                if (cartItems.length === 0) {
+                    if (errorMessage) errorMessage += '\n';
+                    errorMessage += '최소 하나의 상품을 추가해주세요.';
+                    valid = false;
+                }
+                
+                if (!valid) {
+                    e.preventDefault();
+                    alert(errorMessage);
+                    return false;
+                }
+                
+                // 총 금액을 폼에 추가
+                const totalAmount = parseFloat($('#totalAmount').val().replace(/[^0-9.-]+/g, '')) || 0;
+                $('#hiddenFormFields').append(`<input type="hidden" name="total_amount" value="${totalAmount}">`);
+                
+                return true;
+            });
+            
+            // 페이지 로드 시 초기화
+            $('#emptyProductMessage').show();
+        });
+    </script>
+</body>
+</html>

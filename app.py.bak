@@ -1,0 +1,535 @@
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+import sqlite3
+import json
+
+app = Flask(__name__)
+app.secret_key = "wms_secret_key"  # 플래시 메시지를 위한 시크릿 키 추가
+
+# SQLite 데이터베이스 설정 (MySQL 대신 사용)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///wms.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# 제품 모델 정의
+class Product(db.Model):
+    __tablename__ = 'products'
+    product_id = db.Column(db.String(20), primary_key=True)
+    product_name = db.Column(db.String(100), nullable=False)
+    product_name_en = db.Column(db.String(100))
+    category = db.Column(db.String(50), nullable=False)
+    purchase_price = db.Column(db.Numeric(10,2), nullable=False)
+    selling_price = db.Column(db.Numeric(10,2), nullable=False)
+    standard_quantity = db.Column(db.Integer, nullable=False)
+    current_stock = db.Column(db.Integer, nullable=False)
+    minimum_stock = db.Column(db.Integer, nullable=False)
+    weight_unit = db.Column(db.String(10), nullable=False)
+    location = db.Column(db.String(50))  # 제품 위치
+    box_qr = db.Column(db.String(100))   # 박스 QR 코드
+    pallet_qr = db.Column(db.String(100)) # 팔렛 QR 코드
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+# 입출고 기록 모델 정의
+class InventoryTransaction(db.Model):
+    __tablename__ = 'inventory_transactions'
+    transaction_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    product_id = db.Column(db.String(20), db.ForeignKey('products.product_id'), nullable=False)
+    individual_barcode = db.Column(db.String(50))
+    box_barcode = db.Column(db.String(50))
+    pallet_barcode = db.Column(db.String(50))
+    transaction_type = db.Column(db.String(10), nullable=False)  # '입고' 또는 '출고'
+    quantity = db.Column(db.Integer, nullable=False)
+    expiration_date = db.Column(db.Date)
+    transaction_date = db.Column(db.DateTime, default=datetime.now)
+    
+    # 관계 설정
+    product = db.relationship('Product', backref='transactions')
+
+# 고객 모델 정의
+class Customer(db.Model):
+    __tablename__ = 'customers'
+    customer_id = db.Column(db.String(20), primary_key=True)
+    company_name = db.Column(db.String(100), nullable=False)  # 업체 이름
+    name = db.Column(db.String(100), nullable=False)  # 담당자
+    phone = db.Column(db.String(20))
+    email = db.Column(db.String(100))
+    address = db.Column(db.String(255))
+    register_date = db.Column(db.DateTime, default=datetime.now)
+    last_order_date = db.Column(db.DateTime)
+    total_purchase_amount = db.Column(db.Numeric(15, 2), default=0)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    status = db.Column(db.String(50))
+    payment_term = db.Column(db.String(50))
+
+# 샘플 데이터 추가 함수
+def add_sample_data():
+    # 기존 데이터 삭제
+    db.session.query(InventoryTransaction).delete()
+    db.session.query(Product).delete()
+    db.session.query(Customer).delete()
+    
+    # 샘플 제품 데이터
+    products = [
+        Product(product_id='P001', product_name='사과', product_name_en='Apple', category='과일', 
+                purchase_price=1500, selling_price=2000, standard_quantity=10, 
+                current_stock=100, minimum_stock=20, weight_unit='kg'),
+        Product(product_id='P002', product_name='바나나', product_name_en='Banana', category='과일', 
+                purchase_price=800, selling_price=1200, standard_quantity=5, 
+                current_stock=200, minimum_stock=30, weight_unit='kg'),
+        Product(product_id='P003', product_name='오렌지', product_name_en='Orange', category='과일', 
+                purchase_price=2000, selling_price=2500, standard_quantity=8, 
+                current_stock=150, minimum_stock=25, weight_unit='kg'),
+        Product(product_id='P004', product_name='포도', product_name_en='Grape', category='과일', 
+                purchase_price=3000, selling_price=4000, standard_quantity=2, 
+                current_stock=80, minimum_stock=15, weight_unit='kg'),
+        Product(product_id='P005', product_name='딸기', product_name_en='Strawberry', category='과일', 
+                purchase_price=5000, selling_price=6000, standard_quantity=1, 
+                current_stock=50, minimum_stock=10, weight_unit='kg'),
+        Product(product_id='P006', product_name='우유', product_name_en='Milk', category='유제품', 
+                purchase_price=2500, selling_price=3000, standard_quantity=1, 
+                current_stock=200, minimum_stock=30, weight_unit='kg'),
+        Product(product_id='P007', product_name='치즈', product_name_en='Cheese', category='유제품', 
+                purchase_price=4000, selling_price=5000, standard_quantity=1, 
+                current_stock=100, minimum_stock=20, weight_unit='kg'),
+        Product(product_id='P008', product_name='요구르트', product_name_en='Yogurt', category='유제품', 
+                purchase_price=1000, selling_price=1500, standard_quantity=1, 
+                current_stock=20, minimum_stock=30, weight_unit='kg'),
+        Product(product_id='P009', product_name='소고기', product_name_en='Beef', category='축산물', 
+                purchase_price=15000, selling_price=18000, standard_quantity=1, 
+                current_stock=50, minimum_stock=20, weight_unit='kg'),
+        Product(product_id='P010', product_name='돼지고기', product_name_en='Pork', category='축산물', 
+                purchase_price=8000, selling_price=10000, standard_quantity=1, 
+                current_stock=30, minimum_stock=25, weight_unit='kg')
+    ]
+    
+    # 샘플 고객 데이터
+    customers = [
+        Customer(
+            customer_id='C001',
+            company_name='(주)강남전자',
+            name='김철수',
+            phone='010-1234-5678',
+            email='kim@example.com',
+            address='서울시 강남구 테헤란로 123',
+            register_date=datetime.strptime('2023-01-15', '%Y-%m-%d'),
+            last_order_date=datetime.strptime('2023-12-20', '%Y-%m-%d'),
+            total_purchase_amount=1250000
+        ),
+        Customer(
+            customer_id='C002',
+            company_name='송파상사',
+            name='이영희',
+            phone='010-9876-5432',
+            email='lee@example.com',
+            address='서울시 송파구 올림픽로 456',
+            register_date=datetime.strptime('2023-02-20', '%Y-%m-%d'),
+            last_order_date=datetime.strptime('2023-11-15', '%Y-%m-%d'),
+            total_purchase_amount=980000
+        ),
+        Customer(
+            customer_id='C003',
+            company_name='판교IT',
+            name='박지민',
+            phone='010-2468-1357',
+            email='park@example.com',
+            address='경기도 성남시 분당구 판교로 789',
+            register_date=datetime.strptime('2023-03-10', '%Y-%m-%d'),
+            last_order_date=datetime.strptime('2023-12-05', '%Y-%m-%d'),
+            total_purchase_amount=2350000
+        ),
+        Customer(
+            customer_id='C004',
+            company_name='홍대유통',
+            name='최수진',
+            phone='010-1357-2468',
+            email='choi@example.com',
+            address='서울시 마포구 홍대로 101',
+            register_date=datetime.strptime('2023-04-05', '%Y-%m-%d'),
+            last_order_date=datetime.strptime('2023-10-30', '%Y-%m-%d'),
+            total_purchase_amount=750000
+        ),
+        Customer(
+            customer_id='C005',
+            company_name='부평물산',
+            name='정민수',
+            phone='010-3698-2570',
+            email='jung@example.com',
+            address='인천시 부평구 부평대로 202',
+            register_date=datetime.strptime('2023-05-12', '%Y-%m-%d'),
+            last_order_date=datetime.strptime('2023-12-18', '%Y-%m-%d'),
+            total_purchase_amount=1850000
+        )
+    ]
+    
+    # 데이터베이스에 제품 추가
+    for product in products:
+        db.session.add(product)
+    
+    # 데이터베이스에 고객 추가
+    for customer in customers:
+        db.session.add(customer)
+    
+    db.session.commit()
+    
+    # 샘플 입출고 기록 데이터
+    transactions = [
+        # P001 (사과) 입출고 기록
+        InventoryTransaction(product_id='P001', individual_barcode='IND001', box_barcode='BOX001', 
+                         pallet_barcode='PAL001', transaction_type='입고', quantity=50, 
+                         expiration_date=datetime.strptime('2024-06-30', '%Y-%m-%d').date()),
+        InventoryTransaction(product_id='P001', individual_barcode='IND002', box_barcode='BOX001',
+                         pallet_barcode='PAL001', transaction_type='입고', quantity=50,
+                         expiration_date=datetime.strptime('2024-06-30', '%Y-%m-%d').date()),
+        InventoryTransaction(product_id='P001', transaction_type='출고', quantity=20),
+        InventoryTransaction(product_id='P001', transaction_type='출고', quantity=30),
+        
+        # P002 (바나나) 입출고 기록
+        InventoryTransaction(product_id='P002', individual_barcode='IND003', box_barcode='BOX002',
+                         pallet_barcode='PAL002', transaction_type='입고', quantity=100,
+                         expiration_date=datetime.strptime('2024-06-15', '%Y-%m-%d').date()),
+        InventoryTransaction(product_id='P002', individual_barcode='IND004', box_barcode='BOX002',
+                         pallet_barcode='PAL002', transaction_type='입고', quantity=100,
+                         expiration_date=datetime.strptime('2024-06-15', '%Y-%m-%d').date()),
+        InventoryTransaction(product_id='P002', transaction_type='출고', quantity=50),
+        InventoryTransaction(product_id='P002', transaction_type='출고', quantity=50),
+        
+        # P003 (오렌지) 입출고 기록
+        InventoryTransaction(product_id='P003', individual_barcode='IND005', box_barcode='BOX003',
+                         pallet_barcode='PAL003', transaction_type='입고', quantity=80,
+                         expiration_date=datetime.strptime('2024-07-10', '%Y-%m-%d').date()),
+        InventoryTransaction(product_id='P003', individual_barcode='IND006', box_barcode='BOX003',
+                         pallet_barcode='PAL003', transaction_type='입고', quantity=70,
+                         expiration_date=datetime.strptime('2024-07-10', '%Y-%m-%d').date()),
+        InventoryTransaction(product_id='P003', transaction_type='출고', quantity=30),
+        InventoryTransaction(product_id='P003', transaction_type='출고', quantity=20)
+    ]
+    
+    # 데이터베이스에 입출고 기록 추가
+    for transaction in transactions:
+        db.session.add(transaction)
+    
+    db.session.commit()
+
+@app.route('/')
+def index():
+    # 모든 제품 정보 가져오기
+    products = Product.query.all()
+    return render_template('index.html', products=products)
+
+@app.route('/customers')
+def customers():
+    # 모든 고객 정보 가져오기
+    customers = Customer.query.all()
+    return render_template('customers.html', customers=customers)
+
+@app.route('/dashboard')
+def dashboard():
+    # 카테고리별 제품 수 계산
+    categories = db.session.query(Product.category, db.func.count(Product.product_id)) \
+                 .group_by(Product.category).all()
+    
+    # 재고 부족 제품 찾기
+    low_stock_products = Product.query.filter(Product.current_stock <= Product.minimum_stock).all()
+    
+    # 입출고 기록 통계
+    transactions = InventoryTransaction.query.all()
+    inbound = sum(t.quantity for t in transactions if t.transaction_type == '입고')
+    outbound = sum(t.quantity for t in transactions if t.transaction_type == '출고')
+    
+    # 유통기한 임박한 제품 (7일 이내)
+    today = datetime.now().date()
+    expiring_soon = db.session.query(Product, InventoryTransaction) \
+                   .join(InventoryTransaction, Product.product_id == InventoryTransaction.product_id) \
+                   .filter(InventoryTransaction.expiration_date != None) \
+                   .filter(InventoryTransaction.expiration_date <= today + db.func.cast('7 days', db.Date)) \
+                   .filter(InventoryTransaction.expiration_date >= today) \
+                   .all()
+    
+    # 카테고리별 데이터 준비 (차트용)
+    category_data = {
+        'labels': [c[0] for c in categories],
+        'data': [c[1] for c in categories]
+    }
+    
+    # 제품별 재고 데이터 준비 (차트용)
+    stock_data = {
+        'labels': [p.product_name for p in Product.query.all()],
+        'current': [float(p.current_stock) for p in Product.query.all()],
+        'minimum': [float(p.minimum_stock) for p in Product.query.all()]
+    }
+    
+    return render_template('dashboard.html', 
+                          categories=categories,
+                          low_stock_products=low_stock_products,
+                          inbound=inbound,
+                          outbound=outbound,
+                          expiring_soon=expiring_soon,
+                          category_data=json.dumps(category_data),
+                          stock_data=json.dumps(stock_data))
+
+@app.route('/add_product', methods=['GET', 'POST'])
+def add_product():
+    if request.method == 'POST':
+        # 폼에서 제출된 데이터 가져오기
+        product_id = request.form.get('product_id')
+        product_name = request.form.get('product_name')
+        product_name_en = request.form.get('product_name_en')
+        category = request.form.get('category')
+        # 새 카테고리 입력이 있는 경우 해당 값을 사용
+        if category == 'new':
+            category = request.form.get('new_category')
+        purchase_price = request.form.get('purchase_price')
+        selling_price = request.form.get('selling_price')
+        standard_quantity = request.form.get('standard_quantity')
+        current_stock = request.form.get('current_stock')
+        minimum_stock = request.form.get('minimum_stock')
+        weight_unit = request.form.get('weight_unit')
+        location = request.form.get('location')      # 위치 정보 가져오기
+        box_qr = request.form.get('box_qr')          # 박스 QR 정보 가져오기
+        pallet_qr = request.form.get('pallet_qr')    # 팔렛 QR 정보 가져오기
+        
+        # 제품 ID가 이미 존재하는지 확인
+        existing_product = Product.query.filter_by(product_id=product_id).first()
+        if existing_product:
+            flash('이미 존재하는 제품 ID입니다.', 'danger')
+            return redirect(url_for('add_product'))
+        
+        # 새 제품 생성
+        new_product = Product(
+            product_id=product_id,
+            product_name=product_name,
+            product_name_en=product_name_en,
+            category=category,
+            purchase_price=purchase_price,
+            selling_price=selling_price,
+            standard_quantity=standard_quantity,
+            current_stock=current_stock,
+            minimum_stock=minimum_stock,
+            weight_unit=weight_unit,
+            location=location,                # 위치 정보 추가
+            box_qr=box_qr,                    # 박스 QR 정보 추가
+            pallet_qr=pallet_qr               # 팔렛 QR 정보 추가
+        )
+        
+        # 데이터베이스에 추가
+        try:
+            db.session.add(new_product)
+            db.session.commit()
+            flash('제품이 성공적으로 추가되었습니다!', 'success')
+            return redirect(url_for('index'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'제품 추가 중 오류가 발생했습니다: {str(e)}', 'danger')
+            return redirect(url_for('add_product'))
+    
+    # GET 요청 - 추가 페이지 표시
+    # 카테고리 목록 가져오기
+    categories = db.session.query(Product.category).distinct().all()
+    categories = [category[0] for category in categories]
+    
+    return render_template('add_product.html', categories=categories)
+
+@app.route('/add_customer', methods=['GET', 'POST'])
+def add_customer():
+    if request.method == 'POST':
+        # 폼에서 제출된 데이터 가져오기
+        customer_id = request.form.get('customer_id')
+        company_name = request.form.get('company_name')
+        name = request.form.get('name')
+        phone = request.form.get('phone')
+        email = request.form.get('email')
+        address = request.form.get('address')
+        
+        # 고객 ID가 이미 존재하는지 확인
+        existing_customer = Customer.query.filter_by(customer_id=customer_id).first()
+        if existing_customer:
+            flash('이미 존재하는 고객 ID입니다.', 'danger')
+            return redirect(url_for('add_customer'))
+        
+        # 새 고객 생성
+        new_customer = Customer(
+            customer_id=customer_id,
+            company_name=company_name,
+            name=name,
+            phone=phone,
+            email=email,
+            address=address,
+            register_date=datetime.now(),
+            total_purchase_amount=0
+        )
+        
+        # 데이터베이스에 추가
+        try:
+            db.session.add(new_customer)
+            db.session.commit()
+            flash('고객이 성공적으로 추가되었습니다!', 'success')
+            return redirect(url_for('customers'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'고객 추가 중 오류가 발생했습니다: {str(e)}', 'danger')
+            return redirect(url_for('add_customer'))
+    
+    # GET 요청 - 고객 추가 페이지 표시
+    return render_template('add_customer.html')
+
+@app.route('/edit_product/<product_id>', methods=['GET', 'POST'])
+def edit_product(product_id):
+    product = Product.query.filter_by(product_id=product_id).first_or_404()
+    
+    if request.method == 'POST':
+        # 폼에서 제출된 데이터 가져오기
+        product.product_name = request.form.get('product_name')
+        product.product_name_en = request.form.get('product_name_en')
+        
+        category = request.form.get('category')
+        # 새 카테고리 입력이 있는 경우 해당 값을 사용
+        if category == 'new':
+            product.category = request.form.get('new_category')
+        else:
+            product.category = category
+            
+        product.purchase_price = request.form.get('purchase_price')
+        product.selling_price = request.form.get('selling_price')
+        product.standard_quantity = request.form.get('standard_quantity')
+        product.current_stock = request.form.get('current_stock')
+        product.minimum_stock = request.form.get('minimum_stock')
+        product.weight_unit = request.form.get('weight_unit')
+        product.location = request.form.get('location')        # 위치 정보 업데이트
+        product.box_qr = request.form.get('box_qr')            # 박스 QR 정보 업데이트
+        product.pallet_qr = request.form.get('pallet_qr')      # 팔렛 QR 정보 업데이트
+        
+        # 데이터베이스에 변경사항 저장
+        try:
+            db.session.commit()
+            flash('제품이 성공적으로 업데이트되었습니다!', 'success')
+            return redirect(url_for('index'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'제품 업데이트 중 오류가 발생했습니다: {str(e)}', 'danger')
+            return redirect(url_for('edit_product', product_id=product_id))
+    
+    # GET 요청 - 편집 페이지 표시
+    # 카테고리 목록 가져오기
+    categories = db.session.query(Product.category).distinct().all()
+    categories = [category[0] for category in categories]
+    
+    return render_template('edit_product.html', product=product, categories=categories)
+
+@app.route('/edit_customer/<customer_id>', methods=['GET', 'POST'])
+def edit_customer(customer_id):
+    # 고객 ID로 고객 찾기
+    customer = Customer.query.get_or_404(customer_id)
+    
+    if request.method == 'POST':
+        # 폼에서 제출된 데이터 가져오기
+        company_name = request.form.get('company_name')
+        name = request.form.get('name')
+        phone = request.form.get('phone')
+        email = request.form.get('email')
+        address = request.form.get('address')
+        status = request.form.get('status')
+        payment_term = request.form.get('payment_term')
+        
+        # 고객 정보 업데이트
+        try:
+            customer.company_name = company_name
+            customer.name = name
+            customer.phone = phone
+            customer.email = email
+            customer.address = address
+            customer.status = status
+            customer.payment_term = payment_term
+            customer.updated_at = datetime.now()
+            
+            db.session.commit()
+            flash('고객 정보가 성공적으로 수정되었습니다!', 'success')
+            return redirect(url_for('customers'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'고객 정보 수정 중 오류가 발생했습니다: {str(e)}', 'danger')
+            return redirect(url_for('edit_customer', customer_id=customer_id))
+    
+    # GET 요청 - 편집 페이지 표시
+    return render_template('edit_customer.html', customer=customer)
+
+@app.route('/api/delete_products', methods=['POST'])
+def delete_products():
+    try:
+        # 요청에서 제품 ID 목록 가져오기
+        data = request.json
+        product_ids = data.get('product_ids', [])
+        
+        if not product_ids:
+            return jsonify({'success': False, 'message': '삭제할 제품이 선택되지 않았습니다.'}), 400
+        
+        # 각 제품에 대해 연결된 트랜잭션 먼저 삭제
+        for product_id in product_ids:
+            # 제품이 존재하는지 확인
+            product = Product.query.get(product_id)
+            if product:
+                # 연결된 트랜잭션 삭제
+                InventoryTransaction.query.filter_by(product_id=product_id).delete()
+                # 제품 삭제
+                db.session.delete(product)
+        
+        # 변경사항 커밋
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'{len(product_ids)}개의 제품이 성공적으로 삭제되었습니다.',
+            'deleted_count': len(product_ids)
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'제품 삭제 중 오류가 발생했습니다: {str(e)}'
+        }), 500
+
+@app.route('/api/delete_customers', methods=['POST'])
+def delete_customers():
+    try:
+        # 요청에서 고객 ID 목록 가져오기
+        data = request.json
+        customer_ids = data.get('customer_ids', [])
+        
+        if not customer_ids:
+            return jsonify({'success': False, 'message': '삭제할 고객이 선택되지 않았습니다.'}), 400
+        
+        deleted_count = 0
+        # 각 고객 삭제
+        for customer_id in customer_ids:
+            # 고객이 존재하는지 확인
+            customer = Customer.query.get(customer_id)
+            if customer:
+                # 고객 삭제
+                db.session.delete(customer)
+                deleted_count += 1
+        
+        # 변경사항 커밋
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'{deleted_count}명의 고객이 성공적으로 삭제되었습니다.',
+            'deleted_count': deleted_count
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'고객 삭제 중 오류가 발생했습니다: {str(e)}'
+        }), 500
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+        # 샘플 데이터 추가 (테스트용)
+        add_sample_data()
+    app.run(host='0.0.0.0', port=8080, debug=True) 

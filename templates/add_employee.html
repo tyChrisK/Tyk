@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS - 직원 추가</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">WMS 시스템</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">제품 목록</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/customers">업체 목록</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">대시보드</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/employees">직원 관리</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2 class="mb-4">직원 추가</h2>
+
+        <!-- 플래시 메시지 표시 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="/add_employee">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="employee_id" class="form-label">직원 ID*</label>
+                    <input type="text" class="form-control" id="employee_id" name="employee_id" required value="{{ request.form.get('employee_id', '') }}">
+                    <div class="form-text">직원 고유 식별자 (예: EMP001)</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="name" class="form-label">이름*</label>
+                    <input type="text" class="form-control" id="name" name="name" required value="{{ request.form.get('name', '') }}">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="position" class="form-label">직책</label>
+                    <input type="text" class="form-control" id="position" name="position" value="{{ request.form.get('position', '') }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="department" class="form-label">부서</label>
+                    <input type="text" class="form-control" id="department" name="department" value="{{ request.form.get('department', '') }}">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="phone" class="form-label">연락처*</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" required value="{{ request.form.get('phone', '') }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">이메일</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ request.form.get('email', '') }}">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="hire_date" class="form-label">입사일*</label>
+                    <input type="date" class="form-control" id="hire_date" name="hire_date" required value="{{ request.form.get('hire_date', '') }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="address" class="form-label">주소</label>
+                    <input type="text" class="form-control" id="address" name="address" value="{{ request.form.get('address', '') }}">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="notes" class="form-label">메모</label>
+                <textarea class="form-control" id="notes" name="notes" rows="3">{{ request.form.get('notes', '') }}</textarea>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="/employees" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> 목록으로
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> 저장
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 전화번호 자동 포맷팅 함수
+        document.getElementById('phone').addEventListener('input', function(e) {
+            // 숫자만 추출
+            const numericValue = this.value.replace(/\D/g, '');
+            
+            // 숫자 길이에 따라 포맷팅
+            if (numericValue.length <= 3) {
+                this.value = numericValue;
+            } else if (numericValue.length <= 6) {
+                this.value = numericValue.slice(0, 3) + '-' + numericValue.slice(3);
+            } else {
+                this.value = numericValue.slice(0, 3) + '-' + numericValue.slice(3, 6) + '-' + numericValue.slice(6, 10);
+            }
+        });
+
+        // 날짜 포맷 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateFormat = "{{ js_date_format }}";
+            const hireDateInput = document.getElementById('hire_date');
+            
+            // 날짜 포맷 변환 함수
+            function formatDate(date, format) {
+                const d = new Date(date);
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                
+                if (format === 'mm/dd/yyyy') {
+                    return `${month}/${day}/${year}`;
+                } else if (format === 'dd/mm/yyyy') {
+                    return `${day}/${month}/${year}`;
+                } else {
+                    return `${year}-${month}-${day}`;
+                }
+            }
+            
+            // 오늘 날짜를 기본값으로 설정
+            if (!hireDateInput.value) {
+                const today = new Date();
+                if (dateFormat === 'yyyy-mm-dd') {
+                    hireDateInput.type = 'date'; // HTML5 date 입력 사용
+                } else {
+                    // HTML5 date 입력이 적절하지 않은 경우 텍스트로 처리
+                    hireDateInput.type = 'text';
+                    hireDateInput.value = formatDate(today, dateFormat);
+                    hireDateInput.placeholder = dateFormat;
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

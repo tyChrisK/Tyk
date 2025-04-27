@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pick Ticket #{{ order.order_id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #fff;
+        }
+        .pick-ticket {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .order-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .order-details, .customer-details {
+            width: 48%;
+        }
+        .table-items {
+            margin-bottom: 30px;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .print-date {
+            text-align: right;
+            font-size: 0.8rem;
+            color: #777;
+            margin-bottom: 20px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .barcode {
+            font-family: 'Libre Barcode 39', cursive;
+            font-size: 40px;
+            margin-top: 10px;
+        }
+        .info-item {
+            margin-bottom: 5px;
+        }
+        .info-label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-line {
+            width: 200px;
+            border-bottom: 1px solid #000;
+            margin-bottom: 5px;
+        }
+        .signature-name {
+            text-align: center;
+        }
+        .notes {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .btn-controls {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        @media print {
+            .btn-controls {
+                display: none;
+            }
+            body {
+                padding: 0;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="pick-ticket">
+        <div class="btn-controls">
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="bi bi-printer"></i> 인쇄
+            </button>
+            <button class="btn btn-secondary" onclick="window.close()">
+                <i class="bi bi-x-circle"></i> 닫기
+            </button>
+        </div>
+        
+        <div class="header">
+            <div class="title">PICK TICKET</div>
+            <div>주문 번호: {{ order.order_id }}</div>
+            <div class="barcode">*{{ order.order_id }}*</div>
+        </div>
+        
+        <div class="print-date">
+            출력일시: {{ print_datetime }}
+        </div>
+        
+        <div class="order-info">
+            <div class="order-details">
+                <div class="section-title">주문 정보</div>
+                <div class="info-item">
+                    <span class="info-label">주문 날짜:</span>
+                    <span>{{ order.order_date.strftime('%Y-%m-%d') }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">배송 예정일:</span>
+                    <span>{{ order.delivery_date.strftime('%Y-%m-%d') if order.delivery_date else '지정되지 않음' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">상태:</span>
+                    <span>{{ order.status }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">담당자:</span>
+                    <span>{{ order.employee.name if order.employee else '배정되지 않음' }}</span>
+                </div>
+            </div>
+            
+            <div class="customer-details">
+                <div class="section-title">고객 정보</div>
+                <div class="info-item">
+                    <span class="info-label">업체명:</span>
+                    <span>{{ order.customer.company_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">담당자:</span>
+                    <span>{{ order.customer.contact_name or '정보 없음' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">연락처:</span>
+                    <span>{{ order.customer.contact_phone or '정보 없음' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">배송주소:</span>
+                    <span>{{ order.customer.address or '정보 없음' }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-items">
+            <div class="section-title">주문 상품 목록</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>제품 ID</th>
+                        <th>제품명</th>
+                        <th>보관 위치</th>
+                        <th>수량</th>
+                        <th>개별 무게</th>
+                        <th>박스 수량</th>
+                        <th>처리 확인</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order_items %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ item.product_id }}</td>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.location }} {% if item.storage_location %} ({{ item.storage_location }}){% endif %}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.individual_weight }} {{ item.weight_unit }}</td>
+                        <td>{{ item.box_quantity }}</td>
+                        <td style="height: 30px;"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if order.note %}
+        <div class="notes">
+            <div class="section-title">비고</div>
+            <p>{{ order.note }}</p>
+        </div>
+        {% endif %}
+        
+        <div class="signature-section">
+            <div class="signature-block">
+                <div class="signature-line"></div>
+                <div class="signature-name">배송 담당자</div>
+            </div>
+            
+            <div class="signature-block">
+                <div class="signature-line"></div>
+                <div class="signature-name">수령인</div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>이 문서는 제품 피킹 및 배송을 위한 참고 문서입니다.</p>
+            <p>© {{ print_datetime.split('-')[0] }} WMS 시스템</p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

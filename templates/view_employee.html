@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS - 직원 정보</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">WMS 시스템</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">제품 목록</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/customers">업체 목록</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">대시보드</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/employees">직원 관리</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">직원 상세 정보</h4>
+                        <div>
+                            <a href="/edit_employee/{{ employee.id }}" class="btn btn-light btn-sm me-2">
+                                <i class="bi bi-pencil"></i> 수정
+                            </a>
+                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="bi bi-trash"></i> 삭제
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- 플래시 메시지 표시 -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h5>직원 고유 ID</h5>
+                                <p>{{ employee.employee_id }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h5>이름</h5>
+                                <p>{{ employee.name }}</p>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h5>직책</h5>
+                                <p>{{ employee.position or '정보 없음' }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h5>부서</h5>
+                                <p>{{ employee.department or '정보 없음' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h5>연락처</h5>
+                                <p>{{ employee.phone }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h5>이메일</h5>
+                                <p>{{ employee.email or '정보 없음' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h5>입사일</h5>
+                                <p id="formatted_date">{{ employee.hire_date.strftime('%Y-%m-%d') }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h5>상태</h5>
+                                <p>
+                                    {% if employee.status == '재직중' %}
+                                        <span class="badge bg-success">재직중</span>
+                                    {% elif employee.status == '휴직중' %}
+                                        <span class="badge bg-warning text-dark">휴직중</span>
+                                    {% elif employee.status == '퇴사' %}
+                                        <span class="badge bg-danger">퇴사</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ employee.status }}</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <h5>주소</h5>
+                            <p>{{ employee.address or '정보 없음' }}</p>
+                        </div>
+
+                        {% if employee.notes %}
+                        <div class="mb-3">
+                            <h5>비고</h5>
+                            <p>{{ employee.notes }}</p>
+                        </div>
+                        {% endif %}
+
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <a href="/employees" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> 목록으로 돌아가기
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 삭제 확인 모달 -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">직원 삭제 확인</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>{{ employee.name }}</strong> 직원을 정말 삭제하시겠습니까?</p>
+                    <p class="text-danger">이 작업은 되돌릴 수 없습니다.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <form action="/delete_employee/{{ employee.id }}" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-danger">삭제</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 날짜 포맷 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            // 설정에서 날짜 형식 가져오기 (서버 측에서 로드)
+            fetch('/api/test/config')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.details && data.details.date_format) {
+                        formatDateDisplay(data.details.date_format);
+                    }
+                });
+                
+            function formatDateDisplay(format) {
+                const dateElement = document.getElementById('formatted_date');
+                const isoDate = dateElement.textContent.trim(); // YYYY-MM-DD 형식
+                
+                if (isoDate) {
+                    const [year, month, day] = isoDate.split('-');
+                    let formattedDate = isoDate;
+                    
+                    if (format === 'MM/DD/YYYY') {
+                        formattedDate = `${month}/${day}/${year}`;
+                    } else if (format === 'DD/MM/YYYY') {
+                        formattedDate = `${day}/${month}/${year}`;
+                    }
+                    
+                    dateElement.textContent = formattedDate;
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS - 직원 관리</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --dashboard-color: #4e73df;
+            --products-color: #1cc88a;
+            --customers-color: #f6c23e;
+            --orders-color: #e74a3b;
+            --employees-color: #36b9cc;
+        }
+        body {
+            background-color: #f8f9fc;
+        }
+        .navbar {
+            margin-bottom: 30px;
+            padding: 0;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .navbar-brand {
+            padding: 15px 20px;
+            background-color: #4e73df;
+            margin-right: 0;
+            font-weight: bold;
+        }
+        .navbar-nav .nav-item .nav-link {
+            padding: 15px 20px;
+            position: relative;
+            transition: all 0.3s ease;
+            color: #6e707e;
+            font-weight: 500;
+        }
+        .navbar-nav .nav-item .nav-link:hover {
+            color: #333;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        /* 각 메뉴별 활성화 스타일 */
+        .navbar-nav .nav-item .nav-link.dashboard-link.active {
+            color: white;
+            background-color: var(--dashboard-color);
+        }
+        .navbar-nav .nav-item .nav-link.products-link.active {
+            color: white;
+            background-color: var(--products-color);
+        }
+        .navbar-nav .nav-item .nav-link.customers-link.active {
+            color: white;
+            background-color: var(--customers-color);
+        }
+        .navbar-nav .nav-item .nav-link.orders-link.active {
+            color: white;
+            background-color: var(--orders-color);
+        }
+        .navbar-nav .nav-item .nav-link.employees-link.active {
+            color: white;
+            background-color: var(--employees-color);
+        }
+        /* 활성화된 메뉴 표시기 */
+        .navbar-nav .nav-item .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        /* 각 메뉴별 아이콘 색상 */
+        .menu-icon {
+            margin-right: 8px;
+        }
+        .dashboard-icon {
+            color: var(--dashboard-color);
+        }
+        .products-icon {
+            color: var(--products-color);
+        }
+        .customers-icon {
+            color: var(--customers-color);
+        }
+        .orders-icon {
+            color: var(--orders-color);
+        }
+        .employees-icon {
+            color: var(--employees-color);
+        }
+        /* 활성화된 메뉴의 아이콘 색상 */
+        .nav-link.active .menu-icon {
+            color: white;
+        }
+        .page-header {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e3e6f0;
+            padding-bottom: 15px;
+        }
+        .table-container {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            padding: 20px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 네비게이션 바 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white rounded">
+            <div class="container-fluid p-0">
+                <a class="navbar-brand text-white" href="/">WMS 시스템</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link dashboard-link" href="/dashboard">
+                                <i class="bi bi-speedometer2 menu-icon dashboard-icon"></i>대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link products-link" href="/">
+                                <i class="bi bi-box menu-icon products-icon"></i>제품 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link customers-link" href="/customers">
+                                <i class="bi bi-building menu-icon customers-icon"></i>업체 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link orders-link" href="/orders">
+                                <i class="bi bi-cart-check menu-icon orders-icon"></i>제품 주문
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link employees-link active" href="/employees">
+                                <i class="bi bi-people menu-icon employees-icon"></i>직원 관리
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <h1 class="page-header">
+            <i class="bi bi-people-fill text-info"></i> 직원 관리
+        </h1>
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>직원 목록</h2>
+            <a href="/add_employee" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> 새 직원 추가
+            </a>
+        </div>
+
+        <!-- 플래시 메시지 표시 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- 검색 기능 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" action="/employees" class="row g-3">
+                    <div class="col-md-10">
+                        <label for="search" class="form-label">통합 검색</label>
+                        <input type="text" class="form-control" id="search" name="search" value="{{ search_query }}" placeholder="이름, 직원 ID, 부서, 직책, 연락처 등 검색어를 입력하세요">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <div class="d-grid w-100">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> 검색
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-12 text-end">
+                        <a href="/employees" class="btn btn-secondary">
+                            <i class="bi bi-arrow-counterclockwise"></i> 초기화
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if employees %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>직원 ID</th>
+                            <th>이름</th>
+                            <th>부서</th>
+                            <th>직책</th>
+                            <th>연락처</th>
+                            <th>입사일</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employee in employees %}
+                            <tr>
+                                <td>{{ employee.employee_id }}</td>
+                                <td>{{ employee.name }}</td>
+                                <td>{{ employee.department or '-' }}</td>
+                                <td>{{ employee.position or '-' }}</td>
+                                <td>{{ employee.phone }}</td>
+                                <td>{{ employee.hire_date.strftime('%m/%d/%Y') }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/view_employee/{{ employee.id }}" class="btn btn-info">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="/edit_employee/{{ employee.id }}" class="btn btn-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ employee.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- 삭제 확인 모달 -->
+                                    <div class="modal fade" id="deleteModal{{ employee.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ employee.id }}" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="deleteModalLabel{{ employee.id }}">직원 삭제 확인</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p><strong>{{ employee.name }}</strong> 직원을 정말 삭제하시겠습니까?</p>
+                                                    <p class="text-danger">이 작업은 되돌릴 수 없습니다.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                                                    <form action="/delete_employee/{{ employee.id }}" method="POST" style="display: inline;">
+                                                        <button type="submit" class="btn btn-danger">삭제</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> 등록된 직원이 없습니다.
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

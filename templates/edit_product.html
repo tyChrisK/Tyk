@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS - 제품 수정</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --dashboard-color: #4e73df;
+            --products-color: #1cc88a;
+            --customers-color: #f6c23e;
+            --orders-color: #e74a3b;
+            --employees-color: #36b9cc;
+        }
+        body {
+            background-color: #f8f9fc;
+        }
+        .navbar {
+            margin-bottom: 30px;
+            padding: 0;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .navbar-brand {
+            padding: 15px 20px;
+            background-color: #4e73df;
+            margin-right: 0;
+            font-weight: bold;
+        }
+        .navbar-nav .nav-item .nav-link {
+            padding: 15px 20px;
+            position: relative;
+            transition: all 0.3s ease;
+            color: #6e707e;
+            font-weight: 500;
+        }
+        .navbar-nav .nav-item .nav-link:hover {
+            color: #333;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        /* 각 메뉴별 활성화 스타일 */
+        .navbar-nav .nav-item .nav-link.dashboard-link.active {
+            color: white;
+            background-color: var(--dashboard-color);
+        }
+        .navbar-nav .nav-item .nav-link.products-link.active {
+            color: white;
+            background-color: var(--products-color);
+        }
+        .navbar-nav .nav-item .nav-link.customers-link.active {
+            color: white;
+            background-color: var(--customers-color);
+        }
+        .navbar-nav .nav-item .nav-link.orders-link.active {
+            color: white;
+            background-color: var(--orders-color);
+        }
+        .navbar-nav .nav-item .nav-link.employees-link.active {
+            color: white;
+            background-color: var(--employees-color);
+        }
+        /* 활성화된 메뉴 표시기 */
+        .navbar-nav .nav-item .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        /* 각 메뉴별 아이콘 색상 */
+        .menu-icon {
+            margin-right: 8px;
+        }
+        .dashboard-icon {
+            color: var(--dashboard-color);
+        }
+        .products-icon {
+            color: var(--products-color);
+        }
+        .customers-icon {
+            color: var(--customers-color);
+        }
+        .orders-icon {
+            color: var(--orders-color);
+        }
+        .employees-icon {
+            color: var(--employees-color);
+        }
+        /* 활성화된 메뉴의 아이콘 색상 */
+        .nav-link.active .menu-icon {
+            color: white;
+        }
+        .page-header {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e3e6f0;
+            padding-bottom: 15px;
+        }
+        .form-container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+            margin-bottom: 30px;
+        }
+        .section-title {
+            color: #4e73df;
+            margin-bottom: 20px;
+            font-weight: 600;
+            position: relative;
+            padding-left: 15px;
+        }
+        .section-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 5px;
+            height: 25px;
+            background-color: #4e73df;
+            border-radius: 10px;
+        }
+        .form-title {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .btn-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+        }
+        .toast {
+            background-color: #4caf50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            transform: translateY(-20px);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 네비게이션 바 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white rounded">
+            <div class="container-fluid p-0">
+                <a class="navbar-brand text-white" href="/">WMS 시스템</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link dashboard-link" href="/dashboard">
+                                <i class="bi bi-speedometer2 menu-icon dashboard-icon"></i>대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link products-link active" href="/">
+                                <i class="bi bi-box menu-icon products-icon"></i>제품 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link customers-link" href="/customers">
+                                <i class="bi bi-building menu-icon customers-icon"></i>업체 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link orders-link" href="/orders">
+                                <i class="bi bi-cart-check menu-icon orders-icon"></i>제품 주문
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link employees-link" href="/employees">
+                                <i class="bi bi-people menu-icon employees-icon"></i>직원 관리
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <h1 class="page-header">
+            <i class="bi bi-pencil-square text-warning"></i> 제품 수정
+        </h1>
+
+        <!-- 제품 수정 폼 -->
+        <div class="form-container">
+            <form action="{{ url_for('edit_product', product_id=product.product_id) }}" method="POST">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="product_id">제품 ID</label>
+                            <input type="text" class="form-control" id="product_id" name="product_id" value="{{ product.product_id }}" readonly>
+                            <small class="text-muted">제품 ID는 수정할 수 없습니다</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="category">카테고리</label>
+                            <select class="form-select" id="category" name="category" required>
+                                {% for category in categories %}
+                                    <option value="{{ category }}" {% if category == product.category %}selected{% endif %}>{{ category }}</option>
+                                {% endfor %}
+                                <option value="new">새 카테고리 입력...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="new_category_div" style="display: none;">
+                            <label for="new_category">새 카테고리 이름</label>
+                            <input type="text" class="form-control" id="new_category" name="new_category">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="product_name">제품명 (한글)</label>
+                            <input type="text" class="form-control" id="product_name" name="product_name" value="{{ product.product_name }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="product_name_en">제품명 (영문)</label>
+                            <input type="text" class="form-control" id="product_name_en" name="product_name_en" value="{{ product.product_name_en }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="purchase_price" class="form-label">구매가</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="purchase_price" name="purchase_price" value="{{ product.purchase_price }}" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="selling_price" class="form-label">판매가</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="selling_price" name="selling_price" value="{{ product.selling_price }}" step="0.01" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="individual_weight">개별 무게</label>
+                            <input type="number" class="form-control" id="individual_weight" name="individual_weight" min="0" step="0.01" value="{{ product.individual_weight }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="weight_unit">무게 단위</label>
+                            <select class="form-select" id="weight_unit" name="weight_unit" required>
+                                <option value="kg" {% if product.weight_unit == 'kg' %}selected{% endif %}>kg (킬로그램)</option>
+                                <option value="g" {% if product.weight_unit == 'g' %}selected{% endif %}>g (그램)</option>
+                                <option value="L" {% if product.weight_unit == 'L' %}selected{% endif %}>L (리터)</option>
+                                <option value="mL" {% if product.weight_unit == 'mL' %}selected{% endif %}>mL (밀리리터)</option>
+                                <option value="oz" {% if product.weight_unit == 'oz' %}selected{% endif %}>oz (온스)</option>
+                                <option value="lb" {% if product.weight_unit == 'lb' %}selected{% endif %}>lb (파운드)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="box_quantity">박스단위 수량</label>
+                            <input type="number" class="form-control" id="box_quantity" name="box_quantity" min="1" value="{{ product.box_quantity }}">
+                            <small class="text-muted">한 박스당 제품 수량</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="standard_quantity">판매 기본 수량</label>
+                            <input type="number" class="form-control" id="standard_quantity" name="standard_quantity" min="1" value="{{ product.standard_quantity }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="current_stock">현재 재고량</label>
+                            <input type="number" class="form-control" id="current_stock" name="current_stock" min="0" value="{{ product.current_stock }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="minimum_stock">최소 재고량</label>
+                            <input type="number" class="form-control" id="minimum_stock" name="minimum_stock" min="0" value="{{ product.minimum_stock }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="location">제품 위치</label>
+                            <input type="text" class="form-control" id="location" name="location" value="{{ product.location }}" placeholder="예: A-01-01">
+                            <small class="text-muted">창고 내 제품 위치 (선택사항)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="box_qr">박스 QR 코드</label>
+                            <input type="text" class="form-control" id="box_qr" name="box_qr" value="{{ product.box_qr }}">
+                            <small class="text-muted">제품 박스 QR 코드 (선택사항)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="pallet_qr">팔렛 QR 코드</label>
+                            <input type="text" class="form-control" id="pallet_qr" name="pallet_qr" value="{{ product.pallet_qr }}">
+                            <small class="text-muted">제품 팔렛 QR 코드 (선택사항)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="employee_id">담당자</label>
+                            <select class="form-select" id="employee_id" name="employee_id">
+                                <option value="">담당자 없음</option>
+                                {% for employee in employees %}
+                                    <option value="{{ employee.id }}" {% if product.employee_id == employee.id %}selected{% endif %}>
+                                        {{ employee.name }} ({{ employee.department or '부서 없음' }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">제품 담당 직원</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 새로 추가된 필드 -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="sort_order">정렬 번호</label>
+                            <input type="number" class="form-control" id="sort_order" name="sort_order" value="{{ product.sort_order or 0 }}" min="0">
+                            <small class="text-muted">제품 목록 정렬 순서 (선택사항)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="size">크기</label>
+                            <input type="text" class="form-control" id="size" name="size" value="{{ product.size or '' }}" placeholder="예: 대, 중, 소 또는 구체적 규격">
+                            <small class="text-muted">제품 크기 정보 (선택사항)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="storage_location">보관 위치</label>
+                            <input type="text" class="form-control" id="storage_location" name="storage_location" value="{{ product.storage_location or '' }}" placeholder="예: 냉장, 냉동, 상온">
+                            <small class="text-muted">제품 보관 위치/방법 (선택사항)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-container">
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">취소</a>
+                    <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 토스트 메시지 컨테이너 -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 새 카테고리 입력 필드 제어
+        document.getElementById('category').addEventListener('change', function() {
+            var newCategoryDiv = document.getElementById('new_category_div');
+            if (this.value === 'new') {
+                newCategoryDiv.style.display = 'block';
+                document.getElementById('new_category').setAttribute('required', 'required');
+            } else {
+                newCategoryDiv.style.display = 'none';
+                document.getElementById('new_category').removeAttribute('required');
+            }
+        });
+
+        // 토스트 메시지 표시 함수
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            
+            let icon = 'bi-check-circle-fill';
+            let bgColor = '#4caf50'; // 성공 - 녹색
+            
+            if (type === 'error') {
+                icon = 'bi-exclamation-circle-fill';
+                bgColor = '#f44336'; // 에러 - 빨간색
+            } else if (type === 'warning') {
+                icon = 'bi-exclamation-triangle-fill';
+                bgColor = '#ff9800'; // 경고 - 주황색
+            }
+            
+            toast.style.backgroundColor = bgColor;
+            
+            toast.innerHTML = `
+                <i class="bi ${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // 애니메이션을 위한 타이밍
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+            
+            // 3초 후 토스트 숨기기
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.style.opacity = '0';
+                
+                // 애니메이션 완료 후 요소 제거
+                setTimeout(() => {
+                    toastContainer.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html> 

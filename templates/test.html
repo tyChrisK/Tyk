@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS - 테스트 페이지</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --dashboard-color: #4e73df;
+            --products-color: #1cc88a;
+            --customers-color: #f6c23e;
+            --orders-color: #e74a3b;
+            --employees-color: #36b9cc;
+            --settings-color: #6f42c1;
+        }
+        body {
+            background-color: #f8f9fc;
+        }
+        .navbar {
+            margin-bottom: 30px;
+            padding: 0;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .navbar-brand {
+            padding: 15px 20px;
+            background-color: #4e73df;
+            margin-right: 0;
+            font-weight: bold;
+        }
+        .navbar-nav .nav-item .nav-link {
+            padding: 15px 20px;
+            position: relative;
+            transition: all 0.3s ease;
+            color: #6e707e;
+            font-weight: 500;
+        }
+        .navbar-nav .nav-item .nav-link:hover {
+            color: #333;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .navbar-nav .nav-item .nav-link.test-link.active {
+            color: white;
+            background-color: var(--settings-color);
+        }
+        .menu-icon {
+            margin-right: 8px;
+        }
+        .test-icon {
+            color: var(--settings-color);
+        }
+        .nav-link.active .menu-icon {
+            color: white;
+        }
+        .page-header {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e3e6f0;
+            padding-bottom: 15px;
+        }
+        .test-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .test-card h2 {
+            color: #6f42c1;
+            border-bottom: 1px solid #e3e6f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 네비게이션 바 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white rounded">
+            <div class="container-fluid p-0">
+                <a class="navbar-brand text-white" href="/">WMS 시스템</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link dashboard-link" href="/dashboard">
+                                <i class="bi bi-speedometer2 menu-icon dashboard-icon"></i>대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link products-link" href="/">
+                                <i class="bi bi-box menu-icon products-icon"></i>제품 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link customers-link" href="/customers">
+                                <i class="bi bi-building menu-icon customers-icon"></i>업체 목록
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link orders-link" href="/orders">
+                                <i class="bi bi-cart-check menu-icon orders-icon"></i>제품 주문
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link employees-link" href="/employees">
+                                <i class="bi bi-people menu-icon employees-icon"></i>직원 관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link settings-link" href="/settings">
+                                <i class="bi bi-gear menu-icon settings-icon"></i>설정
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link test-link active" href="/test">
+                                <i class="bi bi-bug menu-icon test-icon"></i>테스트
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <h1 class="page-header">
+            <i class="bi bi-bug text-primary"></i> 테스트 페이지
+        </h1>
+
+        <!-- 테스트 카드 -->
+        <div class="test-card">
+            <h2><i class="bi bi-bug-fill"></i> 시스템 테스트</h2>
+            <div class="mb-3">
+                <button type="button" class="btn btn-primary me-2" id="testConnection">
+                    <i class="bi bi-database-check"></i> 데이터베이스 연결 테스트
+                </button>
+                <button type="button" class="btn btn-success me-2" id="testConfig">
+                    <i class="bi bi-gear"></i> 설정 테스트
+                </button>
+                <button type="button" class="btn btn-warning me-2" id="testSearch">
+                    <i class="bi bi-search"></i> 검색 기능 테스트
+                </button>
+            </div>
+            <div id="testResults" class="mt-3">
+                <!-- 테스트 결과가 여기에 표시됩니다 -->
+            </div>
+        </div>
+
+        <!-- 테스트 결과 모달 -->
+        <div class="modal fade" id="testResultModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">테스트 결과</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="testResultContent"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 부트스트랩 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 테스트 버튼 이벤트 핸들러
+        document.getElementById('testConnection').addEventListener('click', function() {
+            fetch('/api/test/connection')
+                .then(response => response.json())
+                .then(data => {
+                    const resultContent = document.getElementById('testResultContent');
+                    resultContent.innerHTML = `
+                        <div class="alert ${data.success ? 'alert-success' : 'alert-danger'}">
+                            <h6>데이터베이스 연결 테스트 결과</h6>
+                            <p>${data.message}</p>
+                            ${data.details ? `<pre>${JSON.stringify(data.details, null, 2)}</pre>` : ''}
+                        </div>
+                    `;
+                    new bootstrap.Modal(document.getElementById('testResultModal')).show();
+                });
+        });
+
+        document.getElementById('testConfig').addEventListener('click', function() {
+            fetch('/api/test/config')
+                .then(response => response.json())
+                .then(data => {
+                    const resultContent = document.getElementById('testResultContent');
+                    resultContent.innerHTML = `
+                        <div class="alert ${data.success ? 'alert-success' : 'alert-danger'}">
+                            <h6>설정 테스트 결과</h6>
+                            <p>${data.message}</p>
+                            ${data.details ? `<pre>${JSON.stringify(data.details, null, 2)}</pre>` : ''}
+                        </div>
+                    `;
+                    new bootstrap.Modal(document.getElementById('testResultModal')).show();
+                });
+        });
+
+        document.getElementById('testSearch').addEventListener('click', function() {
+            fetch('/api/test/search')
+                .then(response => response.json())
+                .then(data => {
+                    const resultContent = document.getElementById('testResultContent');
+                    resultContent.innerHTML = `
+                        <div class="alert ${data.success ? 'alert-success' : 'alert-danger'}">
+                            <h6>검색 기능 테스트 결과</h6>
+                            <p>${data.message}</p>
+                            ${data.details ? `<pre>${JSON.stringify(data.details, null, 2)}</pre>` : ''}
+                        </div>
+                    `;
+                    new bootstrap.Modal(document.getElementById('testResultModal')).show();
+                });
+        });
+    </script>
+</body>
+</html> 
